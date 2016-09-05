@@ -1,0 +1,37 @@
+# apikinect
+server connected to kinect will send 3d data to clients
+client should run on the same computer or share net with server (Bluetooth, WiFi, wired net...)
+
+
+Start
+1-Connect a kinect (or compatible device/not tested) to computer
+2-Open project a_server on QT 5 ide
+3-Click on run (with a_server as active project)
+4-If no kinect detected restart
+5-Click on combo where detected kinects are numbered
+6-Click again to select kinect index (Go button should be activated)
+7-Click 'Go' and if nothing is shown Stop(steps 8,9,10) and go to step 5 'Go' again
+
+Stop
+8-Click on combo where detected kinects are numbered
+9-Click again to select working kinect index (Stop button should be activated)
+10-Click Stop button
+
+Exit
+1-You may start another kinect or quit clicking on exit cross (upper left corner)
+
+
+
+Client
+1-Open a_client project on QT 5 ide
+2-Run project
+3-Write server ip on QLineEdit next to 'server ip:' tag
+4-'Go' Button shoult be active (after ip+Enter), push it
+5-Actually only video work so push 'video' button and something should be shown in 'views' tab
+6-You may play in 'data' tab with 'Ymin', 'modulo', 'ang Kinect' (move kinect head) ... 
+
+Stop
+7-Push 'video' again to stop video data transmission
+8-Push 'Stop' to cut client server connection
+
+Any 'data' tab change on a_client or a_server will modify configuration on a_server indistinctly. Last to change becomes current data in a_server (except led, only works in a_server). But a_server changes in 'data' tab will modify data transmission behaviour but not a_client 'data' tab.
