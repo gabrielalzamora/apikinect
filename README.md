@@ -3,6 +3,7 @@ QT server connected to kinect will send 3d data to clients
 
 in progress...
 
+ 5 sep 2016 - rearrange GitHub repository
 27 ago 2016 - server check boxes to show kinect info or not
 26 ago 2016 - refresco finished
 26 ago 2016 - refresco (refresh) implemented for depth
