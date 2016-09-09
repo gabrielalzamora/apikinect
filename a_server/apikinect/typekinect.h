@@ -26,7 +26,7 @@
 
 /*!
  * \struct RGBQ
- * \brief color in RGB style 32bits long.
+ * \brief color in RGB+A (opacity) style 32bits long.
  */
 typedef struct RGBQ{
     uint8_t rgbRed;//!< red color component of RGB.
@@ -36,19 +36,44 @@ typedef struct RGBQ{
 }RGBQ;
 
 /*!
+ * \struct RGB
+ * \brief color in RGB style 24bits long.
+ */
+typedef struct RGBQ{
+    uint8_t rgbRed;//!< red color component of RGB.
+    uint8_t rgbGreen;//!< green color component of RGB.
+    uint8_t rgbBlue;//!< blue color component of RGB.
+}RGB;
+
+/*!
  * \struct point3c
- * \brief 3D point with color information.
+ * \brief 3D point with rgba 32bits color information.
  *
  * Represents position and color of a point
  * in 3D space with distance in milimeters (mm)
  * and color as RGBQ color.
  */
 typedef struct point3c{
-    int16_t x;//!< sigue cuando te estanques en otra cosa
-    int16_t y;
-    int16_t z;
-    RGBQ color;
+    int16_t x;//!< x dimension on 3D point
+    int16_t y;//!< y dimension on 3D point
+    int16_t z;//!< z dimension on 3D point
+    RGBQ color;//!< RGBA color 32bits
 }point3c;
+
+/*!
+ * \struct point3rgb
+ * \brief 3D point with rgb 24bits color information.
+ *
+ * Represents position and color of a point
+ * in 3D space with distance in milimeters (mm)
+ * and color as RGBQ color.
+ */
+typedef struct point3rgb{
+    int16_t x;//!< x dimension on 3D point
+    int16_t y;//!< y dimension on 3D point
+    int16_t z;//!< z dimension on 3D point
+    RGB color;//!< RGB color 24bits
+}point3rgb;
 
 /*!
  * \struct point2

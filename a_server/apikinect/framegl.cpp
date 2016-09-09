@@ -133,6 +133,7 @@ void FrameGL::paintGL()
     // escena donde se mira XYZ y vector de direccion ascendente
     //gluLookAt(ptoVista[0],ptoVista[1],ptoVista[2],0.0,0.0,5000.0,0.0,-1.0,0.0);
     gluLookAt(-7*anglex, -7*angley-1000,-3000.0,    0.0,-1000.0,3000.0,   0.0,-1.0,0.0);
+
     glScalef(zoom, zoom, 1);
 
     //glRotatef(m_x,1.0f, 0.0f, 0.0f); // Rotacion X (ángulo, vector alrededor del que giras)

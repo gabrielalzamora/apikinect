@@ -13,7 +13,7 @@
 #include <QOpenGLWidget>
 #include <GL/glu.h>
 #include <mutex>
-#include "data.h"
+#include "configdata.h"
 
 
 class FrameGL : public QOpenGLWidget

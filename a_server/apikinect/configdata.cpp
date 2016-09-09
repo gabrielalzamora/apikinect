@@ -7,9 +7,9 @@
  * https://www.gnu.org/licenses/gpl.html
  */
 
-#include "data.h"
+#include "configdata.h"
 /*!
-  \class Data
+  \class ConfigData
   \brief A class to handle configuration data
 
   Used to show parámeters and allow input actions from user
@@ -17,13 +17,13 @@
  */
 
 /*!
- * \brief Data::Data
+ * \brief ConfigData::ConfigData
  * constructor that show all buttons, sliders... and \
  * connect changes on them to data update functions
  * \param parent
- * pointer to QWidget parent of Data
+ * pointer to QWidget parent of ConfigData
  */
-Data::Data(QWidget *parent) : QWidget(parent)
+ConfigData::ConfigData(QWidget *parent) : QWidget(parent)
 {
     //------------Start TAB LAYOUT-----------!!!!!!!!!
     QGroupBox *gbDepth = new QGroupBox(tr("depth"));//--------------DEPTH group
@@ -278,62 +278,62 @@ Data::Data(QWidget *parent) : QWidget(parent)
     connect(PointsSliderM,SIGNAL(sliderMoved(int)),PointsLabelSliderM,SLOT(setNum(int)));
     //------------END TAB LAYOUT-----------!!!!!!!!!!
     //------------let's connect-------------
-    connect(LimitsLineEAngulo,SIGNAL(editingFinished()),this,SLOT(setData()));//---limits
-    connect(LimitsLineEAngK,SIGNAL(editingFinished()),this,SLOT(setData()));
-    connect(LimitsLineEAltura,SIGNAL(editingFinished()),this,SLOT(setData()));
-    connect(LimitsLineEYmin,SIGNAL(editingFinished()),this,SLOT(setData()));
-    connect(LimitsLineEYmax,SIGNAL(editingFinished()),this,SLOT(setData()));
-    connect(LimitsLineEZmax,SIGNAL(editingFinished()),this,SLOT(setData()));
+    connect(LimitsLineEAngulo,SIGNAL(editingFinished()),this,SLOT(setConfigData()));//---limits
+    connect(LimitsLineEAngK,SIGNAL(editingFinished()),this,SLOT(setConfigData()));
+    connect(LimitsLineEAltura,SIGNAL(editingFinished()),this,SLOT(setConfigData()));
+    connect(LimitsLineEYmin,SIGNAL(editingFinished()),this,SLOT(setConfigData()));
+    connect(LimitsLineEYmax,SIGNAL(editingFinished()),this,SLOT(setConfigData()));
+    connect(LimitsLineEZmax,SIGNAL(editingFinished()),this,SLOT(setConfigData()));
 
-    connect(PointsSlider,SIGNAL(sliderReleased()),this,SLOT(setData()));//---------points
-    connect(PointsSliderM,SIGNAL(sliderReleased()),this,SLOT(setData()));
-    connect(PointsCBenvio3D,SIGNAL(stateChanged(int)),this,SLOT(setData()));
-    connect(PointsCBenvio2,SIGNAL(stateChanged(int)),this,SLOT(setData()));
-    connect(PointsCBenvioB,SIGNAL(stateChanged(int)),this,SLOT(setData()));
-    connect(PointsCBcomprimido,SIGNAL(stateChanged(int)),this,SLOT(setData()));
-    connect(PointsLineEEcu,SIGNAL(editingFinished()),this,SLOT(setData()));
-    connect(PointsLineEYmin,SIGNAL(editingFinished()),this,SLOT(setData()));
-    connect(PointsLineEYmax,SIGNAL(editingFinished()),this,SLOT(setData()));
+    connect(PointsSlider,SIGNAL(sliderReleased()),this,SLOT(setConfigData()));//---------points
+    connect(PointsSliderM,SIGNAL(sliderReleased()),this,SLOT(setConfigData()));
+    connect(PointsCBenvio3D,SIGNAL(stateChanged(int)),this,SLOT(setConfigData()));
+    connect(PointsCBenvio2,SIGNAL(stateChanged(int)),this,SLOT(setConfigData()));
+    connect(PointsCBenvioB,SIGNAL(stateChanged(int)),this,SLOT(setConfigData()));
+    connect(PointsCBcomprimido,SIGNAL(stateChanged(int)),this,SLOT(setConfigData()));
+    connect(PointsLineEEcu,SIGNAL(editingFinished()),this,SLOT(setConfigData()));
+    connect(PointsLineEYmin,SIGNAL(editingFinished()),this,SLOT(setConfigData()));
+    connect(PointsLineEYmax,SIGNAL(editingFinished()),this,SLOT(setConfigData()));
 
-    connect(DepthSlider,SIGNAL(sliderReleased()),this,SLOT(setData()));//----------depth
-    connect(DepthCBenvio,SIGNAL(stateChanged(int)),this,SLOT(setData()));
-    connect(DepthCBcomprimido,SIGNAL(stateChanged(int)),this,SLOT(setData()));
-    connect(VideoSlider,SIGNAL(sliderReleased()),this,SLOT(setData()));//----------video
-    connect(VideoCBenvio,SIGNAL(stateChanged(int)),this,SLOT(setData()));
-    connect(VideoCBcomprimido,SIGNAL(stateChanged(int)),this,SLOT(setData()));
+    connect(DepthSlider,SIGNAL(sliderReleased()),this,SLOT(setConfigData()));//----------depth
+    connect(DepthCBenvio,SIGNAL(stateChanged(int)),this,SLOT(setConfigData()));
+    connect(DepthCBcomprimido,SIGNAL(stateChanged(int)),this,SLOT(setConfigData()));
+    connect(VideoSlider,SIGNAL(sliderReleased()),this,SLOT(setConfigData()));//----------video
+    connect(VideoCBenvio,SIGNAL(stateChanged(int)),this,SLOT(setConfigData()));
+    connect(VideoCBcomprimido,SIGNAL(stateChanged(int)),this,SLOT(setConfigData()));
 
     connect(ledGroup,SIGNAL(buttonClicked(int)),this,SLOT(setLedOption(int)));//---led
 
-    setData();
+    setConfigData();
 }
 
 /*!
- * \brief Data::setLedOption
+ * \brief ConfigData::setLedOption
  * to set led light on kinect
  * \param integer holding freenect_led_options value to set led light
  */
-void Data::setLedOption(int option)
+void ConfigData::setLedOption(int option)
 {
     if(option != ledOption){
         ledOption = option;
-        emit dataChanged();
+        emit configDataChanged();
     }
 }
 
 /*!
- * \brief Data::getLedOption
+ * \brief ConfigData::getLedOption
  * \return int value of freenect_led_options
  */
-int Data::getLedOption()
+int ConfigData::getLedOption()
 {
     return ledOption;
 }
 
 /*!
- * \brief Data::setData
- * set data members values as selected in tab_2
+ * \brief ConfigData::setConfigData
+ * set ConfigData members values as selected in gui
  */
-void Data::setData()
+void ConfigData::setConfigData()
 {
     m_srvK.m_fAngulo = LimitsLineEAngulo->text().toFloat();
     m_srvK.m_iAnguloKinect = LimitsLineEAngK->text().toInt();
@@ -374,15 +374,15 @@ void Data::setData()
     if( VideoCBcomprimido->isChecked() ) m_srvK.m_bCompressColor = 1;
     else m_srvK.m_bCompressColor = 0;
 
-    emit dataChanged();
+    emit configDataChanged();
 }
 
 /*!
- * \brief Data::setSrvK
+ * \brief ConfigData::setSrvK
  * sets individual values to all members of srvKinect
- * \param newSrvK   srvKinect to copy in Data.m_srvK
+ * \param newSrvK   srvKinect to copy in ConfigData.m_srvK
  */
-void Data::setSrvK(srvKinect newSrvK)
+void ConfigData::setSrvK(srvKinect newSrvK)
 {
     m_srvK.m_fAngulo = newSrvK.m_fAngulo;
     m_srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect;
@@ -408,47 +408,47 @@ void Data::setSrvK(srvKinect newSrvK)
 }
 
 /*!
- * \brief Data::getSrvK
- * \return Data.m_srvK
+ * \brief ConfigData::getSrvK
+ * \return ConfigData.m_srvK
  */
-srvKinect Data::getSrvK()
+srvKinect ConfigData::getSrvK()
 {
     return m_srvK;
 }
 
 /*!
- * \brief Data::setVideoCBcomprimido
+ * \brief ConfigData::setVideoCBcomprimido
  * check box to send video compress, value set
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * \param value
  * uint8_t = 0 not checked, otherwise checked (send compressed)
  */
-void Data::setVideoCBcomprimido(uint8_t value)
+void ConfigData::setVideoCBcomprimido(uint8_t value)
 {
     if( value ) VideoCBcomprimido->setChecked(true);
     else VideoCBcomprimido->setChecked(false);
 }
 /**
- * @brief Data::setVideoCBenvio
+ * @brief ConfigData::setVideoCBenvio
  * check box to send video, value set
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint8_t = 0 not checked, otherwise checked (send)
  */
-void Data::setVideoCBenvio(uint8_t value)
+void ConfigData::setVideoCBenvio(uint8_t value)
 {
     if( value ) VideoCBenvio->setChecked(true);
     else VideoCBenvio->setChecked(false);
 }
 /**
- * @brief Data::setVideoSlider
+ * @brief ConfigData::setVideoSlider
  * refresh in msec request next video frame
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint32_t from 1 to 2000 msec
  * below 33 msec is unrealistic
  */
-void Data::setVideoSlider(uint32_t value)
+void ConfigData::setVideoSlider(uint32_t value)
 {
     VideoSlider->setValue(value);
     QString s;
@@ -456,38 +456,38 @@ void Data::setVideoSlider(uint32_t value)
     VideoLabelSlider->setText(s);
 }
 /**
- * @brief Data::setDepthCBcomprimido
+ * @brief ConfigData::setDepthCBcomprimido
  * check box to send depth compress, value set
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint8_t = 0 not checked, otherwise checked (send compressed)
  */
-void Data::setDepthCBcomprimido(uint8_t value)
+void ConfigData::setDepthCBcomprimido(uint8_t value)
 {
     if( value ) DepthCBcomprimido->setChecked(true);
     else DepthCBcomprimido->setChecked(false);
 }
 /**
- * @brief Data::setDepthCBenvio
+ * @brief ConfigData::setDepthCBenvio
  * check box to send depth, value set
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint8_t = 0 not checked, otherwise checked (send)
  */
-void Data::setDepthCBenvio(uint8_t value)
+void ConfigData::setDepthCBenvio(uint8_t value)
 {
     if( value ) DepthCBenvio->setChecked(true);
     else DepthCBenvio->setChecked(false);
 }
 /**
- * @brief Data::setDepthSlider
+ * @brief ConfigData::setDepthSlider
  * refresh in msec request next depth frame
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint32_t from 1 to 2000 msec
  * below 33 msec is unrealistic
  */
-void Data::setDepthSlider(uint32_t value)
+void ConfigData::setDepthSlider(uint32_t value)
 {
     DepthSlider->setValue(value);
     QString s;
@@ -495,99 +495,99 @@ void Data::setDepthSlider(uint32_t value)
     DepthLabelSlider->setText(s);
 }
 /**
- * @brief Data::setPointsLineEYmax
- * set superior limit in mm to record data
- * show client setting on server data tab
+ * @brief ConfigData::setPointsLineEYmax
+ * set superior limit in mm to record ConfigData
+ * show client setting on server ConfigData tab
  * @param value
  * int32_t distance in mm respect ground level
  */
-void Data::setPointsLineEYmax(int32_t value)
+void ConfigData::setPointsLineEYmax(int32_t value)
 {
     QString sY;
     sY.setNum(value);
     PointsLineEYmax->setText(sY);
 }
 /**
- * @brief Data::setPointsLineEYmin
- * set inferior limit in mm to record data
+ * @brief ConfigData::setPointsLineEYmin
+ * set inferior limit in mm to record ConfigData
  * @param value
  * int32_t distance in mm respect ground level
  */
-void Data::setPointsLineEYmin(int32_t value)
+void ConfigData::setPointsLineEYmin(int32_t value)
 {
     QString sY;
     sY.setNum(value);
     PointsLineEYmin->setText(sY);
 }
 /**
- * @brief Data::setPointsLineEEcu
- * 'barrido' maximum distance in mm to record data
- * show client setting on server data tab
+ * @brief ConfigData::setPointsLineEEcu
+ * 'barrido' maximum distance in mm to record ConfigData
+ * show client setting on server ConfigData tab
  * @param value
  * uint32_t distance in mm
  */
-void Data::setPointsLineEEcu(int32_t value)
+void ConfigData::setPointsLineEEcu(int32_t value)
 {
     QString s;
     s.setNum(value);
     PointsLineEEcu->setText(s);
 }
 /**
- * @brief Data::setPointsCBcomprimido
+ * @brief ConfigData::setPointsCBcomprimido
  * check box to send 'barrido' compress value set
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint8_t = 0 not checked, otherwise checked (send compressed)
  */
-void Data::setPointsCBcomprimido(uint8_t value)
+void ConfigData::setPointsCBcomprimido(uint8_t value)
 {
     if( value ) PointsCBcomprimido->setChecked(true);
     else PointsCBcomprimido->setChecked(false);
 }
 /**
- * @brief Data::setPointsCBenvioB
+ * @brief ConfigData::setPointsCBenvioB
  * check box to send 'barrido' value set
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint8_t = 0 not checked, otherwise checked (send)
  */
-void Data::setPointsCBenvioB(uint8_t value)
+void ConfigData::setPointsCBenvioB(uint8_t value)
 {
     if( value ) PointsCBenvioB->setChecked(true);
     else PointsCBenvioB->setChecked(false);
 }
 /**
- * @brief Data::setPointsCBenvio2
+ * @brief ConfigData::setPointsCBenvio2
  * check box to send 2D points value set
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint8_t = 0 not checked, otherwise checked (send)
  */
-void Data::setPointsCBenvio2(uint8_t value)
+void ConfigData::setPointsCBenvio2(uint8_t value)
 {
     if( value ) PointsCBenvio2->setChecked(true);
     else PointsCBenvio2->setChecked(false);
 }
 /**
- * @brief Data::setPointsCBenvio3D
+ * @brief ConfigData::setPointsCBenvio3D
  * check box to send 3D points value set
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint8_t = 0 not checked, otherwise checked (send)
  */
-void Data::setPointsCBenvio3D(uint8_t value)
+void ConfigData::setPointsCBenvio3D(uint8_t value)
 {
     if( value ) PointsCBenvio3D->setChecked(true);
     else PointsCBenvio3D->setChecked(false);
 }
 /**
- * @brief Data::setPointsSliderM
+ * @brief ConfigData::setPointsSliderM
  * from how many points pick one to add to point cloud
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint8_t from 1 (all selected 100%) to 10 (10% selected)
  */
-void Data::setPointsSliderM(uint8_t value)
+void ConfigData::setPointsSliderM(uint8_t value)
 {
     PointsSliderM->setValue(value);
     QString s;
@@ -595,14 +595,14 @@ void Data::setPointsSliderM(uint8_t value)
     PointsLabelSliderM->setText(s);
 }
 /**
- * @brief Data::setPointsSlider
+ * @brief ConfigData::setPointsSlider
  * refresh in msec request next point cloud
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * uint32_t from 1 to 2000 msec
  * below 33 msec is unrealistic
  */
-void Data::setPointsSlider(uint32_t value)
+void ConfigData::setPointsSlider(uint32_t value)
 {
     PointsSlider->setValue(value);
     QString s;
@@ -610,68 +610,68 @@ void Data::setPointsSlider(uint32_t value)
     PointsLabelSlider->setText(s);
 }
 /**
- * @brief Data::setLimitsLineEZmax
- * maximum distance in mm to record data
- * show client setting on server data tab
+ * @brief ConfigData::setLimitsLineEZmax
+ * maximum distance in mm to record ConfigData
+ * show client setting on server ConfigData tab
  * @param value
  * double distance in mm from camera to
- * longest distance data recorded
+ * longest distance recorded
  */
-void Data::setLimitsLineEZmax(double value)
+void ConfigData::setLimitsLineEZmax(double value)
 {
     QString sZ;
     sZ.setNum(value);
     LimitsLineEZmax->setText(sZ);
 }
 /**
- * @brief Data::setLimitsLineEYmax
+ * @brief ConfigData::setLimitsLineEYmax
  * maximum high in mm to record data
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * double distance in mm from ground to
  * highest data to be shown
  */
-void Data::setLimitsLineEYmax(double value)
+void ConfigData::setLimitsLineEYmax(double value)
 {
     QString sY;
     sY.setNum(value);
     LimitsLineEYmax->setText(sY);
 }
 /**
- * @brief Data::setLimitsLineEYmin
+ * @brief ConfigData::setLimitsLineEYmin
  * minimum hight in mm to start data record
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * double distance in mm from ground to
  * lowest data to be shown
  */
-void Data::setLimitsLineEYmin(double value)
+void ConfigData::setLimitsLineEYmin(double value)
 {
     QString sY;
     sY.setNum(value);
     LimitsLineEYmin->setText(sY);
 }
 /**
- * @brief Data::setLimitsLineEAltura
+ * @brief ConfigData::setLimitsLineEAltura
  * high of camera above ground in meters
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * double distance in meters to ground from camera
  */
-void Data::setLimitsLineEAltura(double value)
+void ConfigData::setLimitsLineEAltura(double value)
 {
     QString sA;
     sA.setNum(value);
     LimitsLineEAltura->setText(sA);
 }
 /**
- * @brief Data::setLimitsLineEAngK
+ * @brief ConfigData::setLimitsLineEAngK
  * angle of kinect camera respect horizontal
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * integer to set camera angle horizontal = 0º limits(-30 30)
  */
-void Data::setLimitsLineEAngK(int8_t value)
+void ConfigData::setLimitsLineEAngK(int8_t value)
 {
     if( value < -30 ){
         value = - 30;
@@ -686,13 +686,13 @@ void Data::setLimitsLineEAngK(int8_t value)
     LimitsLineEAngK->setText(sAngulo);
 }
 /**
- * @brief Data::setLimitsLineEAngulo
+ * @brief ConfigData::setLimitsLineEAngulo
  * angle of kinect base
- * show client setting on server data tab
+ * show client setting on server ConfigData tab
  * @param value
  * double to set angle, horizontal = 0º
  */
-void Data::setLimitsLineEAngulo(double value)
+void ConfigData::setLimitsLineEAngulo(double value)
 {
     /// arregla esto , que esté de -359.99999 a 359.9999----DEBUG
 //    if( value > 360.0 ) value = value%360;
@@ -700,3 +700,4 @@ void Data::setLimitsLineEAngulo(double value)
     sAngulo.setNum(value);
     LimitsLineEAngulo->setText(sAngulo);
 }
+

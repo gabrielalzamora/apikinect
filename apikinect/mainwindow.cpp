@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016  Gabriel Alzamora
- * see CONTRIB file
+ * Copyright (c) 2015 The Qt Company Ltd
  *
  * This code is licensed to you under the terms of the
  * GNU General Public License. See LICENSE file for the
@@ -8,14 +8,29 @@
  * https://www.gnu.org/licenses/gpl.html
  */
 
+#include <QNetworkInterface>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "apikinect/maincore.h"
+#include "apikinect.h"
+
+//#define SRVKPORT 10003
 
 /*!
  * \class MainWindow
- * \brief gui to show apikinect functionality.
+ * \brief holds all server functionality.
  *
+ * Through members that are type Apikinect, AttendClient,
+ * Ui_MainWindow (ui), Data (ui->tab_2),FrameGL (ui->glWidget),
+ * QTcpServer and Freenect::Freenect manage kinect and client
+ * relations.
+ * Apikinect allow to handle and comunicate with kinect.
+ * Ui_MainWindow (ui) is the graphic interface.
+ * Data (ui->tab_2) holds configuration to handle data.
+ * FrameGL (ui->glWidget) all related to 3D view.
+ * QTcpServer is the server who listen to incoming clients.
+ * Freenect::Freenect will hold usb context on kinect communication.
+ * Apikinect hold single kinect (device) comunication.
+ * AttendClient is generated to attend single client communication.
  */
 
 /*!
@@ -27,15 +42,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-//    numDevices = freenect.deviceCount();
+    numDevices = freenect.deviceCount();
 
     init();
-//    startServer();
+    startServer();
     setServerIp();
     putKcombo();//fill combo box with available kinects
     barridoInit();//paint axes on barrido view
 
-    connect(ui->tab_2,SIGNAL(configDataChanged()),this,SLOT(updateKinect()));
+    connect(ui->tab_2,SIGNAL(dataChanged()),this,SLOT(updateKinect()));
     connect(ui->tab_2,SIGNAL(ledOptionChanged()),this,SLOT(updateKinect()));
 }
 /*!
@@ -45,8 +60,8 @@ MainWindow::~MainWindow()
 {
     qDebug("MainWindow::~MainWindow()");
     if(currentDeviceIndex !=-1){
-//        stoploop();
-//        stopK(currentDeviceIndex);
+        stoploop();
+        stopK(currentDeviceIndex);
     }
     delete sceneVideo;
     delete sceneDepth;
@@ -65,7 +80,7 @@ MainWindow::~MainWindow()
 void MainWindow::videoDataReady()
 {
     if( imgVideo != NULL ) delete imgVideo;
-//    imgVideo = new QImage(videoBuf.data(),640,480,QImage::Format_RGB888);
+    imgVideo = new QImage(videoBuf.data(),640,480,QImage::Format_RGB888);
     sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(ui->gvVideo->width()-2,ui->gvVideo->height()-2,Qt::KeepAspectRatio));
     //sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(320,240,Qt::KeepAspectRatio));
     ui->gvVideo->show();
@@ -83,10 +98,10 @@ void MainWindow::depthDataReady()
     unsigned char r,g,b, distaChar;
     for(int x = 0; x < 640; x++){
         for(int y = 0; y < 480; y++){
-//            int value = depthBuf[(x+y*640)];//value is distance in mm
-//            distaChar = value/39;//to transform distance to 8bit grey
-//            r=g=b=distaChar;
-//            imgDepth->setPixel(x,y,qRgb(r,g,b));// data to fit in 8 bits
+            int value = depthBuf[(x+y*640)];//value is distance in mm
+            distaChar = value/39;//to transform distance to 8bit grey
+            r=g=b=distaChar;
+            imgDepth->setPixel(x,y,qRgb(r,g,b));// data to fit in 8 bits
         }
     }
     sceneDepth->addPixmap(QPixmap::fromImage(*imgDepth).scaled(ui->gvDepth->width()-2,ui->gvDepth->height()-2,Qt::KeepAspectRatio));
@@ -111,8 +126,8 @@ void MainWindow::barridoDataReady()
         ellipseVector.resize(0);
     }
     for(int i=0;i<360;i++){
-//        if(barridoBuf[i] == 0) continue;//no data info no plot
-//        y = 235-(235*barridoBuf[i]/ui->tab_2->m_srvK.m_fZMax);//divide barridoBuf[i] by max mesured distance to fit in screen
+        if(barridoBuf[i] == 0) continue;//no data info no plot
+        y = 235-(235*barridoBuf[i]/ui->tab_2->m_srvK.m_fZMax);//divide barridoBuf[i] by max mesured distance to fit in screen
         x = 320*(360-i)/360;
         ellipseVector.push_back(new QGraphicsEllipseItem(x,y,1.0,1.0));
         sceneBarre->addItem(ellipseVector[aux]);
@@ -142,10 +157,10 @@ void MainWindow::barridoInit()
  */
 void MainWindow::updateKinect()
 {
-//    if( device != NULL ){
-//        device->setLed(freenect_led_options(ui->tab_2->ledOption));
-//        device->setTiltDegrees(double(ui->tab_2->m_srvK.m_iAnguloKinect));
-//    }
+    if( device != NULL ){
+        device->setLed(freenect_led_options(ui->tab_2->ledOption));
+        device->setTiltDegrees(double(ui->tab_2->m_srvK.m_iAnguloKinect));
+    }
 }
 /*!
  * \brief set srvKinect data sended by client
@@ -210,10 +225,10 @@ void MainWindow::updateSrvKinect(srvKinect newSrvK)
 void MainWindow::init()
 {
     //apikinect
-//    device = NULL;
+    device = NULL;
     currentDeviceIndex = -1;
     flag = false;
-/*    videoBuf.resize(640*480*3);
+    videoBuf.resize(640*480*3);
     depthBuf.resize(640*480);
     p3Buf.reserve(300000);//max number of points
     p3Buf.resize(0);//initially we have none
@@ -241,7 +256,6 @@ void MainWindow::init()
     timeVector.resize(e_xtra);
     //server
     mainServer = new QTcpServer(this);
-*/
 }
 /*!
  * \brief write my server ip on gui label
@@ -282,14 +296,158 @@ void MainWindow::putKcombo()
 }
 
 /*!
+ * \brief create kinect handler.
+ *
+ * init 'Apikinect device' to handle kinect of indexK.
+ * \param [in] indexK.
+ */
+void MainWindow::startK(int indexK)
+{
+    device = &freenect.createDevice<Apikinect>(indexK);
+    device->startVideo();
+    device->startDepth();
+    currentDeviceIndex = indexK;
+}
+/*!
+ * \brief destroy kinect handler.
+ * \param [in] index kinect handler index to be destroyed.
+ */
+void MainWindow::stopK(int indexK)
+{
+    device->stopDepth();
+    device->stopVideo();
+    freenect.deleteDevice(indexK);
+    currentDeviceIndex = -1;
+    device = NULL;
+}
+/*!
+ * \brief working horse retrieving video & depth info.
+ *
+ * Get video and depth info to pour it into buffers as
+ * p3Buf (point cloud: 3D+color)...
+ */
+void MainWindow::loop()
+{
+    flag = 1;
+    while( flag ){
+
+        QTime t;
+        timeVector[e_video]=0;
+        timeVector[e_depth]=0;
+        timeVector[e_3]=0;
+        timeVector[e_2]=0;
+        timeVector[e_barrido]=0;
+        timeVector[e_accel]=0;
+
+        if( ui->tab_2->m_srvK.m_bEnvioColor ){
+            t.start();//---------------------------------------------time.start
+            device->getRGB(videoBuf);
+            timeVector[e_video]=t.elapsed();//---------------------timeVector[e_video]
+            if(ui->cb_video->isChecked())
+                videoDataReady();//paint video on gvVideo
+        }
+
+        if( ui->tab_2->m_srvK.m_bEnvioDepth )
+            t.start();//---------------------------------------------time.start
+            device->getDepth(depthBuf);
+            timeVector[e_depth]=t.elapsed();//---------------------timeVector[e_depth]
+            if(ui->cb_depth->isChecked())
+                depthDataReady();//paint depth on gvDepth
+
+//        qApp->processEvents();//stay responsive to button click
+
+        if( ui->tab_2->m_srvK.m_bEnvio2D && ui->tab_2->m_srvK.m_bEnvio3D && ui->tab_2->m_srvK.m_bEnvioBarrido){//all buffers
+            //qDebug("  2D+3D+Barrido");
+            t.start();//---------------------------------------------time.start
+            device->getAll(&structBuffers,&ui->tab_2->m_srvK);//---get all points 3d, 2d & barrido
+            timeVector[e_3] = t.elapsed();//---------------------timeVector[e_3]
+            if(ui->cb_2->isChecked())
+                ui->glWidget->setCloud(p2Buf);//send new point cloud to FrameGL
+            if(ui->cb_3->isChecked())
+                ui->glWidget->setCloud(p3Buf);
+            if(ui->cb_2->isChecked() || ui->cb_3->isChecked())
+                ui->glWidget->repaint();//paint points clouds on oglwidget through FrameGL
+            if(ui->cb_barrido->isChecked())
+                barridoDataReady();//paint Barrido (swept)
+        }else if(!(ui->tab_2->m_srvK.m_bEnvio2D) && ui->tab_2->m_srvK.m_bEnvio3D && ui->tab_2->m_srvK.m_bEnvioBarrido){
+            //qDebug("  3D+Barrido");
+            t.start();//---------------------------------------------time.start
+            device->get3dBarrido(&structBuffers,&ui->tab_2->m_srvK);
+            timeVector[e_3] = t.elapsed();//---------------------timeVector[e_3]
+            if(ui->cb_3->isChecked()){
+                ui->glWidget->setCloud(p3Buf);//send FrameGL new point cloud
+                ui->glWidget->repaint();//paint points cloud on oglwidget through FrameGL
+            }
+            if(ui->cb_barrido->isChecked())
+                barridoDataReady();//paint Barrido (swept)
+        }else if(ui->tab_2->m_srvK.m_bEnvio2D && !(ui->tab_2->m_srvK.m_bEnvio3D) && ui->tab_2->m_srvK.m_bEnvioBarrido){
+            //qDebug("  2D+Barrido");
+            t.start();//---------------------------------------------time.start
+            device->get2dBarrido(&structBuffers,&ui->tab_2->m_srvK);
+            timeVector[e_2] = t.elapsed();//---------------------timeVector[e_2]
+            if(ui->cb_2->isChecked()){
+                ui->glWidget->setCloud(p2Buf);
+                ui->glWidget->repaint();//paint points clouds on oglwidget through FrameGL
+            }
+            if(ui->cb_barrido->isChecked())
+                barridoDataReady();//paint Barrido (swept)
+        }else if(ui->tab_2->m_srvK.m_bEnvio2D && ui->tab_2->m_srvK.m_bEnvio3D && !(ui->tab_2->m_srvK.m_bEnvioBarrido)){
+            //qDebug("  2D+3D");
+            t.start();//---------------------------------------------time.start
+            device->get2and3(&structBuffers,&ui->tab_2->m_srvK);
+            timeVector[e_3] = t.elapsed();//---------------------timeVector[e_3]
+            if(ui->cb_2->isChecked())
+                ui->glWidget->setCloud(p2Buf);//send new point cloud to FrameGL
+            if(ui->cb_3->isChecked())
+                ui->glWidget->setCloud(p3Buf);
+            if(ui->cb_2->isChecked() || ui->cb_3->isChecked())
+                ui->glWidget->repaint();//paint points clouds on oglwidget through FrameGL
+        }else if(ui->tab_2->m_srvK.m_bEnvio3D){
+            //qDebug("  3D");
+            t.start();//---------------------------------------------time.start
+            device->get3d(&structBuffers,&ui->tab_2->m_srvK);
+            timeVector[e_3] = t.elapsed();//---------------------timeVector[e_3]
+            if(ui->cb_3->isChecked()){
+                ui->glWidget->setCloud(p3Buf);//send FrameGL new point cloud
+                ui->glWidget->repaint();//paint points cloud on oglwidget through FrameGL
+            }
+        }else if(ui->tab_2->m_srvK.m_bEnvio2D){
+            //qDebug("  2D");
+            t.start();//---------------------------------------------time.start
+            device->get2(&structBuffers,&ui->tab_2->m_srvK);
+            timeVector[e_2] = t.elapsed();//---------------------timeVector[e_2]
+            if(ui->cb_2->isChecked()){
+                ui->glWidget->setCloud(p2Buf);
+                ui->glWidget->repaint();//paint points clouds on oglwidget through FrameGL
+            }
+        }else if(ui->tab_2->m_srvK.m_bEnvioBarrido){
+            //qDebug("  Barrido");
+            t.start();//---------------------------------------------time.start
+            device->getBarrido(&structBuffers,&ui->tab_2->m_srvK);
+            timeVector[e_barrido] = t.elapsed();//---------------------timeVector[e_barrido]
+            if(ui->cb_barrido->isChecked())
+                barridoDataReady();//paint Barrido (swept)
+        }
+        device->getAccel(a);
+        printTimeVector(timeVector);
+//------------------------------------------pinta aceleraciones---------------
+        qApp->processEvents();//stay responsive to button click
+    }
+}
+/*!
+ * \brief convinience funtion to stop loop seting while(flag)=0.
+ */
+void MainWindow::stoploop()
+{
+    flag = 0;
+}
+/*!
  * \brief aux function to control time spend in calculus or painting.
  * \param [out] timeV vector to save data.
  */
 void MainWindow::printTimeVector(std::vector<int> &timeV)
 {
     QString str,aux;
-    accel a;
-
     str = "get video = ";
     aux.setNum(timeVector[e_video]);
     str.append(aux);
@@ -312,7 +470,7 @@ void MainWindow::printTimeVector(std::vector<int> &timeV)
     //pinta las aceleraciones----------------------accel
     aux = "\n  accel X = ";
     str.append(aux);
-//    aux.setNum(a.accel_x);
+    aux.setNum(a.accel_x);
     str.append(aux);
     aux = "\n  accel Y = ";
     str.append(aux);
@@ -332,9 +490,9 @@ void MainWindow::on_pbGo_clicked()///--------------------------DEBUG
 {
     ui->pbGo->setEnabled(false);
     int index = ui->combo->currentText().toInt();
-//    startK(index);
+    startK(index);
     currentDeviceIndex = index;
-//    loop();
+    loop();
 }
 /*!
  * \brief stop kinect data flow and delete handler
@@ -342,31 +500,20 @@ void MainWindow::on_pbGo_clicked()///--------------------------DEBUG
 void MainWindow::on_pbStop_clicked()
 {
     ui->pbStop->setEnabled(false);
-//    stoploop();
+    stoploop();
     int index = ui->combo->currentText().toInt();
     if( index == currentDeviceIndex ){
-//        stopK(index);
+        stopK(index);
     }
 }
-
-/*!
- * \brief override window close event to stop loop and delete apikinect handler.
- * \param [in] event
- */
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    qDebug("MainWindow::closeEvent()");
-    //this->~MainWindow();//no es aquí, mira QTcpServer o sockets, peta si cierras tras conectar
-    //exit(0);
-}
-
 /*!
  * \brief when combo item selected -> buttons activated
- * \param [in] index
+ * \param [in] arg1
  * pointer to string with kinect index selected in combo box
  */
-void MainWindow::on_combo_highlighted(int index)
+void MainWindow::on_combo_activated(const QString &arg1)
 {
+    int index = arg1.toInt();
     if ( index < 0 || index >= numDevices ){
         ui->textEdit->setText(" ERROR kinect index out of bounds. Restart.");
         return;
@@ -378,6 +525,43 @@ void MainWindow::on_combo_highlighted(int index)
         ui->pbGo->setEnabled(false);
         ui->pbStop->setEnabled(true);
     }else{
-        ui->textEdit->setText(" First stop running active kinect, then start the other one selected.");
+        ui->textEdit->setText(" First stop running kinect, then start the other.");
     }
+}
+
+/*!
+ * \brief start QTcpServer listening at port 9999 and connect to attendNewClient()
+ */
+void MainWindow::startServer()
+{
+    qDebug("MainWindow::startServer");
+    if( !mainServer->listen(QHostAddress::Any,SRVKPORT) ){
+        ui->textEdit->setText(mainServer->errorString());
+        mainServer->close();
+        return;
+    }
+    connect(mainServer, SIGNAL(newConnection()), this, SLOT(attendNewClient()));
+}
+/*!
+ * \brief when client connection incoming create a new 'AttendClient' and bind
+ */
+void MainWindow::attendNewClient()///------test with concurrent clients----------DEBUG
+{
+    qDebug("MainWindow::attendNewClient");
+    attendant = new AttendClient(mainServer->nextPendingConnection(),&structBuffers,this);
+    if( attendant == NULL ) ui->textEdit->setText("BAD_ALLOC  AttendClient");
+    attendClients.push_back(attendant);
+
+    connect(attendant,SIGNAL(newSrvKinect(srvKinect)),this,SLOT(updateSrvKinect(srvKinect)));
+}
+
+/*!
+ * \brief override window close event to stop loop and delete apikinect handler.
+ * \param [in] event
+ */
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    qDebug("MainWindow::closeEvent()");
+    //this->~MainWindow();//no es aquí, mira QTcpServer o sockets, peta si cierras tras conectar
+    //exit(0);
 }

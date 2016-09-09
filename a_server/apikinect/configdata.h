@@ -21,11 +21,11 @@
 #include <QLayout>
 #include "typekinect.h"
 
-class Data : public QWidget
+class ConfigData : public QWidget
 {
     Q_OBJECT
 public:
-    explicit Data(QWidget *parent = 0);
+    explicit ConfigData(QWidget *parent = 0);
     srvKinect m_srvK;
     int ledOption;
 
@@ -53,18 +53,18 @@ public:
 
 signals:
     void ledOptionChanged();
-    void dataChanged();
+    void configDataChanged();
     void srvKChanged(srvKinect newSrvK);
 
 public slots:
     void setLedOption(int option);
     int getLedOption();
-    void setData();
+    void setConfigData();
     void setSrvK(srvKinect newSrvK);
     srvKinect getSrvK();
 
 private:
-//  tab_2 data
+//  tab_2 ConfigData
     QLineEdit *LimitsLineEAngulo;
     QLineEdit *LimitsLineEAngK;
     QLineEdit *LimitsLineEAltura;
