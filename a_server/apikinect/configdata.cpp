@@ -335,44 +335,44 @@ int ConfigData::getLedOption()
  */
 void ConfigData::setConfigData()
 {
-    m_srvK.m_fAngulo = LimitsLineEAngulo->text().toFloat();
-    m_srvK.m_iAnguloKinect = LimitsLineEAngK->text().toInt();
-    if( m_srvK.m_iAnguloKinect > 30 ){
-        m_srvK.m_iAnguloKinect = 30;
+    srvK.m_fAngulo = LimitsLineEAngulo->text().toFloat();
+    srvK.m_iAnguloKinect = LimitsLineEAngK->text().toInt();
+    if( srvK.m_iAnguloKinect > 30 ){
+        srvK.m_iAnguloKinect = 30;
         LimitsLineEAngK->setText("30");
-    }else if( m_srvK.m_iAnguloKinect < -30 ){
-        m_srvK.m_iAnguloKinect = -30;
+    }else if( srvK.m_iAnguloKinect < -30 ){
+        srvK.m_iAnguloKinect = -30;
         LimitsLineEAngK->setText("-30");
     }
-    m_srvK.m_fAltura = LimitsLineEAltura->text().toFloat();
-    m_srvK.m_fYMin = LimitsLineEYmin->text().toFloat();
-    m_srvK.m_fYMax = LimitsLineEYmax->text().toFloat();
-    m_srvK.m_fZMax = LimitsLineEZmax->text().toFloat();
+    srvK.m_fAltura = LimitsLineEAltura->text().toFloat();
+    srvK.m_fYMin = LimitsLineEYmin->text().toFloat();
+    srvK.m_fYMax = LimitsLineEYmax->text().toFloat();
+    srvK.m_fZMax = LimitsLineEZmax->text().toFloat();
 
-    m_srvK.m_ulRefresco3D = PointsSlider->value();
-    m_srvK.m_usModulo3D = PointsSliderM->value();
-    if( PointsCBenvio3D->isChecked() ) m_srvK.m_bEnvio3D = 1;
-    else m_srvK.m_bEnvio3D = 0;
-    if( PointsCBenvio2->isChecked() ) m_srvK.m_bEnvio2D = 1;
-    else m_srvK.m_bEnvio2D = 0;
-    if( PointsCBenvioB->isChecked() ) m_srvK.m_bEnvioBarrido = 1;
-    else m_srvK.m_bEnvioBarrido = 0;
-    if( PointsCBcomprimido->isChecked() ) m_srvK.m_bCompress3D = 1;
-    else m_srvK.m_bCompress3D = 0;
-    m_srvK.m_iBarridoEcu = PointsLineEEcu->text().toInt();
-    m_srvK.m_iBarridoYMin = PointsLineEYmin->text().toInt();
-    m_srvK.m_iBarridoYMax = PointsLineEYmax->text().toInt();
+    srvK.m_ulRefresco3D = PointsSlider->value();
+    srvK.m_usModulo3D = PointsSliderM->value();
+    if( PointsCBenvio3D->isChecked() ) srvK.m_bEnvio3D = 1;
+    else srvK.m_bEnvio3D = 0;
+    if( PointsCBenvio2->isChecked() ) srvK.m_bEnvio2D = 1;
+    else srvK.m_bEnvio2D = 0;
+    if( PointsCBenvioB->isChecked() ) srvK.m_bEnvioBarrido = 1;
+    else srvK.m_bEnvioBarrido = 0;
+    if( PointsCBcomprimido->isChecked() ) srvK.m_bCompress3D = 1;
+    else srvK.m_bCompress3D = 0;
+    srvK.m_iBarridoEcu = PointsLineEEcu->text().toInt();
+    srvK.m_iBarridoYMin = PointsLineEYmin->text().toInt();
+    srvK.m_iBarridoYMax = PointsLineEYmax->text().toInt();
 
-    m_srvK.m_ulRefrescoDepth = DepthSlider->value();
-    if( DepthCBenvio->isChecked() ) m_srvK.m_bEnvioDepth = 1;
-    else m_srvK.m_bEnvioDepth = 0;
-    if( DepthCBcomprimido->isChecked() ) m_srvK.m_bCompressDepth = 1;
-    else m_srvK.m_bCompressDepth = 0;
-    m_srvK.m_ulRefrescoColor = VideoSlider->value();
-    if( VideoCBenvio->isChecked() ) m_srvK.m_bEnvioColor = 1;
-    else m_srvK.m_bEnvioColor = 0;
-    if( VideoCBcomprimido->isChecked() ) m_srvK.m_bCompressColor = 1;
-    else m_srvK.m_bCompressColor = 0;
+    srvK.m_ulRefrescoDepth = DepthSlider->value();
+    if( DepthCBenvio->isChecked() ) srvK.m_bEnvioDepth = 1;
+    else srvK.m_bEnvioDepth = 0;
+    if( DepthCBcomprimido->isChecked() ) srvK.m_bCompressDepth = 1;
+    else srvK.m_bCompressDepth = 0;
+    srvK.m_ulRefrescoColor = VideoSlider->value();
+    if( VideoCBenvio->isChecked() ) srvK.m_bEnvioColor = 1;
+    else srvK.m_bEnvioColor = 0;
+    if( VideoCBcomprimido->isChecked() ) srvK.m_bCompressColor = 1;
+    else srvK.m_bCompressColor = 0;
 
     emit configDataChanged();
 }
@@ -380,40 +380,40 @@ void ConfigData::setConfigData()
 /*!
  * \brief ConfigData::setSrvK
  * sets individual values to all members of srvKinect
- * \param newSrvK   srvKinect to copy in ConfigData.m_srvK
+ * \param newSrvK   srvKinect to copy in ConfigData.srvK
  */
 void ConfigData::setSrvK(srvKinect newSrvK)
 {
-    m_srvK.m_fAngulo = newSrvK.m_fAngulo;
-    m_srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect;
-    m_srvK.m_fAltura = newSrvK.m_fAltura;
-    m_srvK.m_fYMin = newSrvK.m_fYMin;
-    m_srvK.m_fYMax = newSrvK.m_fYMax;
-    m_srvK.m_fZMax = newSrvK.m_fZMax;
-    m_srvK.m_ulRefresco3D = newSrvK.m_ulRefresco3D;
-    m_srvK.m_usModulo3D = newSrvK.m_usModulo3D;
-    m_srvK.m_bEnvio3D = newSrvK.m_bEnvio3D;
-    m_srvK.m_bEnvio2D = newSrvK.m_bEnvio2D;
-    m_srvK.m_bEnvioBarrido = newSrvK.m_bEnvioBarrido;
-    m_srvK.m_bCompress3D = newSrvK.m_bCompress3D;
-    m_srvK.m_iBarridoEcu = newSrvK.m_iBarridoEcu;
-    m_srvK.m_iBarridoYMin = newSrvK.m_iBarridoYMin;
-    m_srvK.m_iBarridoYMax = newSrvK.m_iBarridoYMax;
-    m_srvK.m_ulRefrescoDepth = newSrvK.m_ulRefrescoDepth;
-    m_srvK.m_bEnvioDepth = newSrvK.m_bEnvioDepth;
-    m_srvK.m_bCompressDepth = newSrvK.m_bCompressDepth;
-    m_srvK.m_ulRefrescoColor = newSrvK.m_ulRefrescoColor;
-    m_srvK.m_bEnvioColor = newSrvK.m_bEnvioColor;
-    m_srvK.m_bCompressColor = newSrvK.m_bCompressColor;
+    srvK.m_fAngulo = newSrvK.m_fAngulo;
+    srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect;
+    srvK.m_fAltura = newSrvK.m_fAltura;
+    srvK.m_fYMin = newSrvK.m_fYMin;
+    srvK.m_fYMax = newSrvK.m_fYMax;
+    srvK.m_fZMax = newSrvK.m_fZMax;
+    srvK.m_ulRefresco3D = newSrvK.m_ulRefresco3D;
+    srvK.m_usModulo3D = newSrvK.m_usModulo3D;
+    srvK.m_bEnvio3D = newSrvK.m_bEnvio3D;
+    srvK.m_bEnvio2D = newSrvK.m_bEnvio2D;
+    srvK.m_bEnvioBarrido = newSrvK.m_bEnvioBarrido;
+    srvK.m_bCompress3D = newSrvK.m_bCompress3D;
+    srvK.m_iBarridoEcu = newSrvK.m_iBarridoEcu;
+    srvK.m_iBarridoYMin = newSrvK.m_iBarridoYMin;
+    srvK.m_iBarridoYMax = newSrvK.m_iBarridoYMax;
+    srvK.m_ulRefrescoDepth = newSrvK.m_ulRefrescoDepth;
+    srvK.m_bEnvioDepth = newSrvK.m_bEnvioDepth;
+    srvK.m_bCompressDepth = newSrvK.m_bCompressDepth;
+    srvK.m_ulRefrescoColor = newSrvK.m_ulRefrescoColor;
+    srvK.m_bEnvioColor = newSrvK.m_bEnvioColor;
+    srvK.m_bCompressColor = newSrvK.m_bCompressColor;
 }
 
 /*!
  * \brief ConfigData::getSrvK
- * \return ConfigData.m_srvK
+ * \return ConfigData.srvK
  */
 srvKinect ConfigData::getSrvK()
 {
-    return m_srvK;
+    return srvK;
 }
 
 /*!

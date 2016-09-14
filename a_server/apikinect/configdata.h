@@ -26,7 +26,7 @@ class ConfigData : public QWidget
     Q_OBJECT
 public:
     explicit ConfigData(QWidget *parent = 0);
-    srvKinect m_srvK;
+    srvKinect srvK;
     int ledOption;
 
     void setLimitsLineEAngulo(double value);

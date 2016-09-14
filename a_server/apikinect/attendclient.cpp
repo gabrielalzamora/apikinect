@@ -425,7 +425,6 @@ void AttendClient::send3D()
         out << (uint8_t) (*structBuffers.ptrP3Buf)[i].color.rgbRed;//read point3c color red component
         out << (uint8_t) (*structBuffers.ptrP3Buf)[i].color.rgbGreen;
         out << (uint8_t) (*structBuffers.ptrP3Buf)[i].color.rgbBlue;
-        out << (uint8_t) (*structBuffers.ptrP3Buf)[i].color.rgbReserved;
     }
     out.device()->seek(0);//pointer to buff start
     out << quint64(buff.size() - sizeof(quint64));//write buff size at beginning

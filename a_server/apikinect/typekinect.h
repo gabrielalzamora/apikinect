@@ -28,7 +28,7 @@
  * \struct RGBQ
  * \brief color in RGB+A (opacity) style 32bits long.
  */
-typedef struct RGBQ{
+typedef struct {
     uint8_t rgbRed;//!< red color component of RGB.
     uint8_t rgbGreen;//!< green color component of RGB.
     uint8_t rgbBlue;//!< blue color component of RGB.
@@ -39,11 +39,11 @@ typedef struct RGBQ{
  * \struct RGB
  * \brief color in RGB style 24bits long.
  */
-typedef struct RGBQ{
+typedef struct {
     uint8_t rgbRed;//!< red color component of RGB.
     uint8_t rgbGreen;//!< green color component of RGB.
     uint8_t rgbBlue;//!< blue color component of RGB.
-}RGB;
+}rgb;
 
 /*!
  * \struct point3c
@@ -53,7 +53,7 @@ typedef struct RGBQ{
  * in 3D space with distance in milimeters (mm)
  * and color as RGBQ color.
  */
-typedef struct point3c{
+typedef struct {
     int16_t x;//!< x dimension on 3D point
     int16_t y;//!< y dimension on 3D point
     int16_t z;//!< z dimension on 3D point
@@ -72,14 +72,14 @@ typedef struct point3rgb{
     int16_t x;//!< x dimension on 3D point
     int16_t y;//!< y dimension on 3D point
     int16_t z;//!< z dimension on 3D point
-    RGB color;//!< RGB color 24bits
+    rgb color;//!< RGB color 24bits
 }point3rgb;
 
 /*!
  * \struct point2
  * \brief 2D point on horizontal plane.
  */
-typedef struct point2{
+typedef struct {
     int16_t x;
     int16_t z;
 }point2;
@@ -88,7 +88,7 @@ typedef struct point2{
  * \struct accel
  * \brief acceleration detected components.
  */
-typedef struct accel{
+typedef struct {
     double accel_x;
     double accel_y;
     double accel_z;
@@ -102,7 +102,7 @@ typedef struct accel{
  * client to server, change kinect camera angle remotely
  * and update data to be sent, limits, refresh...
  */
-typedef struct srvKinect{
+typedef struct {
     double m_fAngulo;//!< angle (degrees) with horizontal plane of kinect base.
     int8_t m_iAnguloKinect;//!< sigue cuando te estanques en otra cosa
     double m_fAltura;
@@ -130,10 +130,10 @@ typedef struct srvKinect{
  * \struct pBuf
  * \brief holds pointers to all kinect and derived data
  */
-typedef struct pBuf{
+typedef struct {
     std::vector<uint8_t> *ptrVideoBuf;//!< container of video info from kinect
     std::vector<uint16_t> *ptrDepthBuf;//!< container of depth info from kinect
-    std::vector<point3c> *ptrP3Buf;//!< container of points cloud <- video+depth
+    std::vector<point3rgb> *ptrP3Buf;//!< container of points cloud <- video+depth
     std::vector<point2> *ptrP2Buf;//!< container of 2D points = (point cloud) - color - z
     std::vector<uint32_t> *ptrBarridoBuf;//!< barridoBuf contains distance to closer object on angle (360-i)/2 degrees, xOz plane (horizontal to camera)
     accel *ptrAccel;//!< acceleration components x,y,z (y ~ 9,81 if m_iAnguloKinect=0)
@@ -142,18 +142,18 @@ typedef struct pBuf{
 /*!
  * \brief to easy locate variables in vectors
  *
- * In server it contains time; but in client it's used
+ * In server used in timevector; but in client it's used
  * for frequency control.
  */
-enum eOption {
+typedef enum {
     e_video,
     e_depth,
     e_3,
     e_2,
     e_barrido,
     e_accel,
-    e_loop,
+    e_ir,
     e_xtra
-};
+} eOption;
 
 #endif // TYPEKINECT_H

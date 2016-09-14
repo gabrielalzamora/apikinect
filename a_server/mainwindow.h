@@ -30,17 +30,21 @@ public:
 
 signals:
     void srvKinectChanged(srvKinect newSrvK);
-    void go();
-    void stop();
-    void
+    void ledChanged(freenect_led_options lop);
+    void go(int kindex);
+    void stop(int kindex);
 
 public slots:
-    void videoDataReady();//print videoBuf
-    void depthDataReady();//print depthBuf
-    void barridoDataReady();//print BarridoBuf
-    void barridoInit();//paint axes
-    void updateKinect();//send ledOption and angle to kinect
-    void updateSrvKinect(srvKinect newSrvK);//set new configuration data
+    void paintVideo();
+    void paintDepth();
+    void paintBarrido();
+    void paintBarridoAxes();
+    void paint3D();
+    void paint2D();
+    void printTimeVector();
+    void updateSrvKinect(srvKinect newSrvK);
+    void setSrvKinect(srvKinect newSrvK);//->ConfigData
+    srvKinect getSrvKinect();//<-ConfigData
 
 protected:
     void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
@@ -49,14 +53,16 @@ private slots:
     void init();
     void setServerIp();
     void putKcombo();
+    void initconnects();
 
-    void printTimeVector(std::vector<int> &timeV);
-
-    //gui
     void on_pbGo_clicked();
     void on_pbStop_clicked();
-  //  void on_combo_activated(const QString &arg1);
     void on_combo_highlighted(int index);
+    //data link in tab_2
+    void sliderVideoUp(QString s);
+    void sliderDepthUp(QString s);
+    void slider3DUp(QString s);
+    void sliderModuleUp(QString s);
 
 private:
     Ui::MainWindow *ui;
@@ -68,12 +74,7 @@ private:
     QImage *imgBarre;
     QGraphicsEllipseItem *ellipse;//!< holds single Barrido point to add to sceneBarre
     std::vector<QGraphicsEllipseItem*> ellipseVector;//!< holds Barrido points to paint in ellipse
-    QPainter *ptpt;
 
-    int flag;//!< 0 stop loop(), otherwise let loop() run
-    int numDevices;//!< number of detected kinects
-    int currentDeviceIndex;//!< index of active kinect
-
-    std::vector<int> timeVector;//msecs
+    MainCore * apicore;
 };
 #endif // MAINWINDOW_H

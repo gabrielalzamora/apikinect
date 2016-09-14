@@ -12,18 +12,16 @@
 #include "maincore.h"
 #include "apikinect.h"
 
-//#define SRVKPORT 10003
-
 /*!
  * \class MainCore
  * \brief holds all server functionality.
  *
  * Through members that are type Apikinect, AttendClient,
- * ConfigData (ui->tab_2),FrameGL (ui->glWidget),
+ * ConfigData (config),FrameGL (ui->glWidget),
  * QTcpServer and Freenect::Freenect manage kinect and client
  * relations.
  * Apikinect allow to handle and comunicate with kinect.
- * ConfigData (ui->tab_2) holds configuration to handle data.
+ * ConfigData (config) holds configuration to handle data.
  * FrameGL (ui->glWidget) all related to 3D view.
  * QTcpServer is the server who listen to incoming clients.
  * Freenect::Freenect will hold usb context on kinect communication.
@@ -37,14 +35,11 @@
  */
 MainCore::MainCore(QObject *parent) : QObject(parent)
 {
-
-    numDevices = freenect.deviceCount();
+    //qDebug("MainCore::MainCore");
+    numKinects = getKnumber();
 
     init();
     startServer();
-    setServerIp();
-    putKcombo();//fill combo box with available kinects
-
 }
 /*!
  * \brief destructor
@@ -52,15 +47,11 @@ MainCore::MainCore(QObject *parent) : QObject(parent)
 MainCore::~MainCore()
 {
     qDebug("MainCore::~MainCore()");
-    if(currentDeviceIndex !=-1){
+    if(currentKIndex !=-1){
         stoploop();
-        stopK(currentDeviceIndex);
+        stopK(currentKIndex);
     }
 }
-
-
-
-
 /*!
  * \brief set current led option and kinect angle on active kinect.
  *
@@ -70,8 +61,8 @@ MainCore::~MainCore()
 void MainCore::updateKinect()
 {
     if( device != NULL ){
-        device->setLed(freenect_led_options(cd_ledOption));
-        device->setTiltDegrees(double(cd_srvK.m_iAnguloKinect));
+        device->setLed(freenect_led_options(config->ledOption));
+        device->setTiltDegrees(double(config->srvK.m_iAnguloKinect));
     }
 }
 /*!
@@ -82,55 +73,63 @@ void MainCore::updateKinect()
 void MainCore::updateSrvKinect(srvKinect newSrvK)
 {
 //    qDebug("MainServer::updateKinect");
-    ui->tab_2->m_srvK.m_fAngulo = newSrvK.m_fAngulo;
-    ui->tab_2->setLimitsLineEAngulo(newSrvK.m_fAngulo);
-    ui->tab_2->m_srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect;
-    ui->tab_2->setLimitsLineEAngK(newSrvK.m_iAnguloKinect);
-    ui->tab_2->m_srvK.m_fAltura = newSrvK.m_fAltura;
-    ui->tab_2->setLimitsLineEAltura(newSrvK.m_fAltura);
-    ui->tab_2->m_srvK.m_fYMin = newSrvK.m_fYMin;
-    ui->tab_2->setLimitsLineEYmin(newSrvK.m_fYMin);
-    ui->tab_2->m_srvK.m_fYMax = newSrvK.m_fYMax;
-    ui->tab_2->setLimitsLineEYmax(newSrvK.m_fYMax);
-    ui->tab_2->m_srvK.m_fZMax = newSrvK.m_fZMax;
-    ui->tab_2->setLimitsLineEZmax(newSrvK.m_fZMax);
-
-    ui->tab_2->m_srvK.m_ulRefresco3D = newSrvK.m_ulRefresco3D;
-    ui->tab_2->setPointsSlider(newSrvK.m_ulRefresco3D);
-    ui->tab_2->m_srvK.m_usModulo3D = newSrvK.m_usModulo3D;
-    ui->tab_2->setPointsSliderM(newSrvK.m_usModulo3D);
-
-    ui->tab_2->m_srvK.m_bEnvio3D = newSrvK.m_bEnvio3D;
-    ui->tab_2->setPointsCBenvio3D(newSrvK.m_bEnvio3D);
-    ui->tab_2->m_srvK.m_bEnvio2D = newSrvK.m_bEnvio2D;
-    ui->tab_2->setPointsCBenvio2(newSrvK.m_bEnvio2D);
-    ui->tab_2->m_srvK.m_bEnvioBarrido = newSrvK.m_bEnvioBarrido;
-    ui->tab_2->setPointsCBenvioB(newSrvK.m_bEnvioBarrido);
-    ui->tab_2->m_srvK.m_bCompress3D = newSrvK.m_bCompress3D;
-    ui->tab_2->setPointsCBcomprimido(newSrvK.m_bCompress3D);
-    ui->tab_2->m_srvK.m_iBarridoEcu = newSrvK.m_iBarridoEcu;
-    ui->tab_2->setPointsLineEEcu(newSrvK.m_iBarridoEcu);
-    ui->tab_2->m_srvK.m_iBarridoYMin = newSrvK.m_iBarridoYMin;
-    ui->tab_2->setPointsLineEYmin(newSrvK.m_iBarridoYMin);
-    ui->tab_2->m_srvK.m_iBarridoYMax = newSrvK.m_iBarridoYMax;
-    ui->tab_2->setPointsLineEYmax(newSrvK.m_iBarridoYMax);
-
-    ui->tab_2->m_srvK.m_ulRefrescoDepth = newSrvK.m_ulRefrescoDepth;
-    ui->tab_2->setDepthSlider(newSrvK.m_ulRefrescoDepth);
-    ui->tab_2->m_srvK.m_bEnvioDepth = newSrvK.m_bEnvioDepth;
-    ui->tab_2->setDepthCBenvio(newSrvK.m_bEnvioDepth);
-    ui->tab_2->m_srvK.m_bCompressDepth = newSrvK.m_bCompressDepth;
-    ui->tab_2->setDepthCBcomprimido(newSrvK.m_bCompressDepth);
-    ui->tab_2->m_srvK.m_ulRefrescoColor = newSrvK.m_ulRefrescoColor;
-    ui->tab_2->setVideoSlider(newSrvK.m_ulRefrescoColor);
-    ui->tab_2->m_srvK.m_bEnvioColor = newSrvK.m_bEnvioColor;
-    ui->tab_2->setVideoCBenvio(newSrvK.m_bEnvioColor);
-    ui->tab_2->m_srvK.m_bCompressColor = newSrvK.m_bCompressColor;
-    ui->tab_2->setVideoCBcomprimido(newSrvK.m_bCompressColor);
+    config->srvK.m_fAngulo = newSrvK.m_fAngulo;
+    config->srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect;
+    config->srvK.m_fAltura = newSrvK.m_fAltura;
+    config->srvK.m_fYMin = newSrvK.m_fYMin;
+    config->srvK.m_fYMax = newSrvK.m_fYMax;
+    config->srvK.m_fZMax = newSrvK.m_fZMax;
+    config->srvK.m_ulRefresco3D = newSrvK.m_ulRefresco3D;
+    config->srvK.m_usModulo3D = newSrvK.m_usModulo3D;
+    config->srvK.m_bEnvio3D = newSrvK.m_bEnvio3D;
+    config->srvK.m_bEnvio2D = newSrvK.m_bEnvio2D;
+    config->srvK.m_bEnvioBarrido = newSrvK.m_bEnvioBarrido;
+    config->srvK.m_bCompress3D = newSrvK.m_bCompress3D;
+    config->srvK.m_iBarridoEcu = newSrvK.m_iBarridoEcu;
+    config->srvK.m_iBarridoYMin = newSrvK.m_iBarridoYMin;
+    config->srvK.m_iBarridoYMax = newSrvK.m_iBarridoYMax;
+    config->srvK.m_ulRefrescoDepth = newSrvK.m_ulRefrescoDepth;
+    config->srvK.m_bEnvioDepth = newSrvK.m_bEnvioDepth;
+    config->srvK.m_bCompressDepth = newSrvK.m_bCompressDepth;
+    config->srvK.m_ulRefrescoColor = newSrvK.m_ulRefrescoColor;
+    config->srvK.m_bEnvioColor = newSrvK.m_bEnvioColor;
+    config->srvK.m_bCompressColor = newSrvK.m_bCompressColor;
 
     emit updateKinect();
 }
-
+/*!
+ * \brief get number of kinect detected
+ * \return number of kinect
+ */
+int MainCore::getKnumber()
+{
+    return freenect.deviceCount();
+}
+/*!
+ * \brief getter for currentKIndex
+ * \return currentKIndex
+ */
+int MainCore::getCurrentKIndex()
+{
+    return currentKIndex;
+}
+/*!
+ * \brief getter for timeVector, return requested time
+ * \param opt wich time will return
+ * \return requested time in ms
+ */
+int MainCore::getTime(eOption opt)
+{
+    return timeVector[opt];
+}
+/*!
+ * \brief getter for acceleration
+ * \return
+ */
+accel MainCore::getAccel()
+{
+    return a;
+}
 /*!
  * \brief convenience function to initiate members
  */
@@ -138,73 +137,25 @@ void MainCore::init()
 {
     //apikinect
     device = NULL;
-    currentDeviceIndex = -1;
+    currentKIndex = -1;
     flag = false;
     videoBuf.resize(640*480*3);
     depthBuf.resize(640*480);
-    p3Buf.reserve(300000);//max number of points
-    p3Buf.resize(0);//initially we have none
+    p3rgbBuf.reserve(300000);//max number of points
+    p3rgbBuf.resize(0);//initially we have none
     p2Buf.reserve(300000);
     p2Buf.resize(0);
     barridoBuf.resize(360);
     a.accel_x = a.accel_y = a.accel_z = 0;
     structBuffers.ptrVideoBuf = &videoBuf;
     structBuffers.ptrDepthBuf = &depthBuf;
-    structBuffers.ptrP3Buf = &p3Buf;
+    structBuffers.ptrP3Buf = &p3rgbBuf;
     structBuffers.ptrP2Buf = &p2Buf;
     structBuffers.ptrBarridoBuf = &barridoBuf;
     structBuffers.ptrAccel = &a;
-    ellipseVector.reserve(360);
-    ellipseVector.resize(0);
-    sceneVideo = new QGraphicsScene;
-    sceneDepth = new QGraphicsScene;
-    sceneBarre = new QGraphicsScene;
-    imgVideo = NULL;
-    imgDepth = NULL;
-    imgBarre = NULL;
-    ui->gvVideo->setScene(sceneVideo);
-    ui->gvDepth->setScene(sceneDepth);
-    ui->gvBarrido->setScene(sceneBarre);
     timeVector.resize(e_xtra);
     //server
     mainServer = new QTcpServer(this);
-}
-/*!
- * \brief write my server ip on gui label
- */
-void MainCore::setServerIp()
-{
-    QString ip;
-    QList<QHostAddress> ipList = QNetworkInterface::allAddresses();
-    // use first non-localhost IPv4 address
-    for (int i = 0; i < ipList.size(); ++i) {
-        if( (ipList.at(i) != QHostAddress::LocalHost) && ipList.at(i).toIPv4Address() ) {
-            ip = ipList.at(i).toString();
-            break;
-        }
-    }
-    // if none, then use localhost
-    if (ip.isEmpty()) ip = QHostAddress(QHostAddress::LocalHost).toString();
-    ui->label_ip->setText(ip);
-}
-/*!
- * \brief fill combo list with detected kinect index
- */
-void MainCore::putKcombo()
-{
-    if( numDevices == 0 ){//num devices 0 => no kinect connected
-        ui->combo->addItem("No kinect detected");
-        ui->textEdit->setText(" No kinect detected, unable to start");
-        ui->textEdit->show();
-        ui->pbGo->setEnabled(false);
-        ui->pbStop->setEnabled(false);
-    }else{
-        for( int i = 0; i < numDevices ; i++){
-            QString str;
-            ui->combo->addItem(str.setNum(i));
-        }
-        ui->textEdit->setText(" Select kinect in combo box to start\n1-click combo\n2-click device number in combo\n3-click Go");
-    }
 }
 
 /*!
@@ -218,7 +169,7 @@ void MainCore::startK(int indexK)
     device = &freenect.createDevice<Apikinect>(indexK);
     device->startVideo();
     device->startDepth();
-    currentDeviceIndex = indexK;
+    currentKIndex = indexK;
 }
 /*!
  * \brief destroy kinect handler.
@@ -229,14 +180,14 @@ void MainCore::stopK(int indexK)
     device->stopDepth();
     device->stopVideo();
     freenect.deleteDevice(indexK);
-    currentDeviceIndex = -1;
+    currentKIndex = -1;
     device = NULL;
 }
 /*!
  * \brief working horse retrieving video & depth info.
  *
  * Get video and depth info to pour it into buffers as
- * p3Buf (point cloud: 3D+color)...
+ * p3rgbBuf (point cloud: 3D+color)...
  */
 void MainCore::loop()
 {
@@ -251,7 +202,7 @@ void MainCore::loop()
         timeVector[e_barrido]=0;
         timeVector[e_accel]=0;
 
-        if( ui->tab_2->m_srvK.m_bEnvioColor ){
+        if( config->srvK.m_bEnvioColor ){
             t.start();//---------------------------------------------time.start
             device->getRGB(videoBuf);
             timeVector[e_video]=t.elapsed();//---------------------timeVector[e_video]
@@ -259,7 +210,7 @@ void MainCore::loop()
                 videoDataReady();//paint video on gvVideo
         }
 
-        if( ui->tab_2->m_srvK.m_bEnvioDepth )
+        if( config->srvK.m_bEnvioDepth )
             t.start();//---------------------------------------------time.start
             device->getDepth(depthBuf);
             timeVector[e_depth]=t.elapsed();//---------------------timeVector[e_depth]
@@ -268,34 +219,34 @@ void MainCore::loop()
 
 //        qApp->processEvents();//stay responsive to button click
 
-        if( ui->tab_2->m_srvK.m_bEnvio2D && ui->tab_2->m_srvK.m_bEnvio3D && ui->tab_2->m_srvK.m_bEnvioBarrido){//all buffers
+        if( config->srvK.m_bEnvio2D && config->srvK.m_bEnvio3D && config->srvK.m_bEnvioBarrido){//all buffers
             //qDebug("  2D+3D+Barrido");
             t.start();//---------------------------------------------time.start
-            device->getAll(&structBuffers,&ui->tab_2->m_srvK);//---get all points 3d, 2d & barrido
+            device->getAll(&structBuffers,&config->srvK);//---get all points 3d, 2d & barrido
             timeVector[e_3] = t.elapsed();//---------------------timeVector[e_3]
             if(ui->cb_2->isChecked())
                 ui->glWidget->setCloud(p2Buf);//send new point cloud to FrameGL
             if(ui->cb_3->isChecked())
-                ui->glWidget->setCloud(p3Buf);
+                ui->glWidget->setCloud(p3rgbBuf);
             if(ui->cb_2->isChecked() || ui->cb_3->isChecked())
                 ui->glWidget->repaint();//paint points clouds on oglwidget through FrameGL
             if(ui->cb_barrido->isChecked())
                 barridoDataReady();//paint Barrido (swept)
-        }else if(!(ui->tab_2->m_srvK.m_bEnvio2D) && ui->tab_2->m_srvK.m_bEnvio3D && ui->tab_2->m_srvK.m_bEnvioBarrido){
+        }else if(!(config->srvK.m_bEnvio2D) && config->srvK.m_bEnvio3D && config->srvK.m_bEnvioBarrido){
             //qDebug("  3D+Barrido");
             t.start();//---------------------------------------------time.start
-            device->get3dBarrido(&structBuffers,&ui->tab_2->m_srvK);
+            device->get3dBarrido(&structBuffers,&config->srvK);
             timeVector[e_3] = t.elapsed();//---------------------timeVector[e_3]
             if(ui->cb_3->isChecked()){
-                ui->glWidget->setCloud(p3Buf);//send FrameGL new point cloud
+                ui->glWidget->setCloud(p3rgbBuf);//send FrameGL new point cloud
                 ui->glWidget->repaint();//paint points cloud on oglwidget through FrameGL
             }
             if(ui->cb_barrido->isChecked())
                 barridoDataReady();//paint Barrido (swept)
-        }else if(ui->tab_2->m_srvK.m_bEnvio2D && !(ui->tab_2->m_srvK.m_bEnvio3D) && ui->tab_2->m_srvK.m_bEnvioBarrido){
+        }else if(config->srvK.m_bEnvio2D && !(config->srvK.m_bEnvio3D) && config->srvK.m_bEnvioBarrido){
             //qDebug("  2D+Barrido");
             t.start();//---------------------------------------------time.start
-            device->get2dBarrido(&structBuffers,&ui->tab_2->m_srvK);
+            device->get2dBarrido(&structBuffers,&config->srvK);
             timeVector[e_2] = t.elapsed();//---------------------timeVector[e_2]
             if(ui->cb_2->isChecked()){
                 ui->glWidget->setCloud(p2Buf);
@@ -303,39 +254,39 @@ void MainCore::loop()
             }
             if(ui->cb_barrido->isChecked())
                 barridoDataReady();//paint Barrido (swept)
-        }else if(ui->tab_2->m_srvK.m_bEnvio2D && ui->tab_2->m_srvK.m_bEnvio3D && !(ui->tab_2->m_srvK.m_bEnvioBarrido)){
+        }else if(config->srvK.m_bEnvio2D && config->srvK.m_bEnvio3D && !(config->srvK.m_bEnvioBarrido)){
             //qDebug("  2D+3D");
             t.start();//---------------------------------------------time.start
-            device->get2and3(&structBuffers,&ui->tab_2->m_srvK);
+            device->get2and3(&structBuffers,&config->srvK);
             timeVector[e_3] = t.elapsed();//---------------------timeVector[e_3]
             if(ui->cb_2->isChecked())
                 ui->glWidget->setCloud(p2Buf);//send new point cloud to FrameGL
             if(ui->cb_3->isChecked())
-                ui->glWidget->setCloud(p3Buf);
+                ui->glWidget->setCloud(p3rgbBuf);
             if(ui->cb_2->isChecked() || ui->cb_3->isChecked())
                 ui->glWidget->repaint();//paint points clouds on oglwidget through FrameGL
-        }else if(ui->tab_2->m_srvK.m_bEnvio3D){
+        }else if(config->srvK.m_bEnvio3D){
             //qDebug("  3D");
             t.start();//---------------------------------------------time.start
-            device->get3d(&structBuffers,&ui->tab_2->m_srvK);
+            device->get3d(&structBuffers,&config->srvK);
             timeVector[e_3] = t.elapsed();//---------------------timeVector[e_3]
             if(ui->cb_3->isChecked()){
-                ui->glWidget->setCloud(p3Buf);//send FrameGL new point cloud
+                ui->glWidget->setCloud(p3rgbBuf);//send FrameGL new point cloud
                 ui->glWidget->repaint();//paint points cloud on oglwidget through FrameGL
             }
-        }else if(ui->tab_2->m_srvK.m_bEnvio2D){
+        }else if(config->srvK.m_bEnvio2D){
             //qDebug("  2D");
             t.start();//---------------------------------------------time.start
-            device->get2(&structBuffers,&ui->tab_2->m_srvK);
+            device->get2(&structBuffers,&config->srvK);
             timeVector[e_2] = t.elapsed();//---------------------timeVector[e_2]
             if(ui->cb_2->isChecked()){
                 ui->glWidget->setCloud(p2Buf);
                 ui->glWidget->repaint();//paint points clouds on oglwidget through FrameGL
             }
-        }else if(ui->tab_2->m_srvK.m_bEnvioBarrido){
+        }else if(config->srvK.m_bEnvioBarrido){
             //qDebug("  Barrido");
             t.start();//---------------------------------------------time.start
-            device->getBarrido(&structBuffers,&ui->tab_2->m_srvK);
+            device->getBarrido(&structBuffers,&config->srvK);
             timeVector[e_barrido] = t.elapsed();//---------------------timeVector[e_barrido]
             if(ui->cb_barrido->isChecked())
                 barridoDataReady();//paint Barrido (swept)
@@ -403,7 +354,7 @@ void MainCore::on_pbGo_clicked()///--------------------------DEBUG
     ui->pbGo->setEnabled(false);
     int index = ui->combo->currentText().toInt();
     startK(index);
-    currentDeviceIndex = index;
+    currentKIndex = index;
     loop();
 }
 /*!
@@ -414,7 +365,7 @@ void MainCore::on_pbStop_clicked()
     ui->pbStop->setEnabled(false);
     stoploop();
     int index = ui->combo->currentText().toInt();
-    if( index == currentDeviceIndex ){
+    if( index == currentKIndex ){
         stopK(index);
     }
 }
@@ -430,10 +381,10 @@ void MainCore::on_combo_activated(const QString &arg1)
         ui->textEdit->setText(" ERROR kinect index out of bounds. Restart.");
         return;
     }
-    if( currentDeviceIndex == -1 ){
+    if( currentKIndex == -1 ){
         ui->pbGo->setEnabled(true);
         ui->pbStop->setEnabled(false);
-    }else if( currentDeviceIndex == index ){
+    }else if( currentKIndex == index ){
         ui->pbGo->setEnabled(false);
         ui->pbStop->setEnabled(true);
     }else{

@@ -1,3 +1,12 @@
+#apikinect gitignore
+
+# txt temporary files
+*~
+
+# debug folders
+a_client-Debug/
+a_server-Debug/
+
 # Compiled Object files
 *.slo
 *.lo

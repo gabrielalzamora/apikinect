@@ -27,24 +27,25 @@ public:
     bool getRGB(std::vector<uint8_t> &buffer);
     bool getDepth(std::vector<uint16_t> &buffer);
 
-    void getAll(std::vector<tk_point3c> &buffer3,std::vector<uint32_t> &bufferB);//
-    void getAll(pBuf *structBuffers, tk_srvKinect *aSrvKinect);
+    void getAll(std::vector<point3rgb> &buffer3,std::vector<uint32_t> &bufferB);//
+    void getAll(pBuf *structBuffers, srvKinect *aSrvKinect);
 
-    void get3d(std::vector<tk_point3c> &buffer);
-    void get3d(pBuf *structBuffers, tk_srvKinect *aSrvKinect);
+    void get3d(std::vector<point3rgb> &buffer);
+    void get3d(pBuf *structBuffers, srvKinect *aSrvKinect);
 
-    void get2(std::vector<tk_point2> &buffer);
-    void get2(pBuf *structBuffers, tk_srvKinect *aSrvKinect);
+    void get2(std::vector<point2> &buffer);
+    void get2(pBuf *structBuffers, srvKinect *aSrvKinect);
 
     void getBarrido(std::vector<uint32_t> &buffer);
-    void getBarrido(pBuf *structBuffers, tk_srvKinect *aSrvKinect);
+    void getBarrido(pBuf *structBuffers, srvKinect *aSrvKinect);
 
-    void get3dBarrido(pBuf *structBuffers, tk_srvKinect *aSrvKinect);
-    void get2dBarrido(pBuf *structBuffers, tk_srvKinect *aSrvKinect);
-    void get2and3(pBuf *structBuffers, tk_srvKinect *aSrvKinect);
+    void get3dBarrido(pBuf *structBuffers, srvKinect *aSrvKinect);
+    void get2dBarrido(pBuf *structBuffers, srvKinect *aSrvKinect);
+    void get2and3(pBuf *structBuffers, srvKinect *aSrvKinect);
 
     void getAccel(accel &a);
-    void getAngle(double &a);
+    void getAngle(int &a);
+    void setAngle(int a);
 
 private:
     freenect_device * myself;

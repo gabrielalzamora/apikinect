@@ -8,6 +8,7 @@
  * https://www.gnu.org/licenses/gpl.html
  */
 
+#include <QNetworkInterface>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "apikinect/maincore.h"
@@ -30,13 +31,10 @@ MainWindow::MainWindow(QWidget *parent) :
 //    numDevices = freenect.deviceCount();
 
     init();
-//    startServer();
     setServerIp();
     putKcombo();//fill combo box with available kinects
-    barridoInit();//paint axes on barrido view
-
-    connect(ui->tab_2,SIGNAL(configDataChanged()),this,SLOT(updateKinect()));
-    connect(ui->tab_2,SIGNAL(ledOptionChanged()),this,SLOT(updateKinect()));
+    paintBarridoAxes();//paint axes on barrido view
+    initconnects();
 }
 /*!
  * \brief destructor
@@ -44,9 +42,9 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     qDebug("MainWindow::~MainWindow()");
-    if(currentDeviceIndex !=-1){
+    if(apicore->getCurrentKIndex() !=-1){
 //        stoploop();
-//        stopK(currentDeviceIndex);
+//        stopK(currentKIndex);
     }
     delete sceneVideo;
     delete sceneDepth;
@@ -62,7 +60,7 @@ MainWindow::~MainWindow()
  * This function is called to paint new video data (new frame or image available).
  * Is painted on ui->gvVideo sceneVideo using data from 'videoBuf' vector data.
  */
-void MainWindow::videoDataReady()
+void MainWindow::paintVideo()
 {
     if( imgVideo != NULL ) delete imgVideo;
 //    imgVideo = new QImage(videoBuf.data(),640,480,QImage::Format_RGB888);
@@ -76,7 +74,7 @@ void MainWindow::videoDataReady()
  * This function is called to paint new depth data (new frame or image available).
  * Is painted on ui->gvDepth sceneDepth using data from 'depthBuf' vector data.
  */
-void MainWindow::depthDataReady()
+void MainWindow::paintDepth()
 {
     if( imgDepth != NULL ) delete imgDepth;
     imgDepth = new QImage(640,480,QImage::Format_RGB32);
@@ -99,7 +97,7 @@ void MainWindow::depthDataReady()
  * This function is called when paint new Barrido data is needed.
  * Is painted on ui->gvBarrido sceneBarre using 'barridoBuf' vector data.
  */
-void MainWindow::barridoDataReady()
+void MainWindow::paintBarrido()
 {
     int x,y;
     int aux(0);
@@ -123,7 +121,7 @@ void MainWindow::barridoDataReady()
 /*!
  * \brief draw axes on sceneBarre to show on gvBarrido.
  */
-void MainWindow::barridoInit()
+void MainWindow::paintBarridoAxes()
 {
     ui->gvBarrido->setBackgroundBrush(QColor(200,240,240,255));//light blue
     sceneBarre->setBackgroundBrush(QColor(200,240,240,255));
@@ -135,98 +133,99 @@ void MainWindow::barridoInit()
     sceneBarre->addLine(ejey,ejesPen);
 }
 /*!
- * \brief set current led option and kinect angle on active kinect.
- *
- * When any data on 'Data' object change it sends the order to
- * update to active kinect
+ * \brief utility not implemented
  */
-void MainWindow::updateKinect()
+void MainWindow::paint3D()
 {
-//    if( device != NULL ){
-//        device->setLed(freenect_led_options(ui->tab_2->ledOption));
-//        device->setTiltDegrees(double(ui->tab_2->m_srvK.m_iAnguloKinect));
-//    }
+
 }
 /*!
- * \brief set srvKinect data sended by client
- * \param [in] sk
- * client current srvKinect
+ * \brief utility not implemented
  */
-void MainWindow::updateSrvKinect(srvKinect newSrvK)
+void MainWindow::paint2D()
 {
-//    qDebug("MainServer::updateKinect");
-    ui->tab_2->m_srvK.m_fAngulo = newSrvK.m_fAngulo;
-    ui->tab_2->setLimitsLineEAngulo(newSrvK.m_fAngulo);
-    ui->tab_2->m_srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect;
-    ui->tab_2->setLimitsLineEAngK(newSrvK.m_iAnguloKinect);
-    ui->tab_2->m_srvK.m_fAltura = newSrvK.m_fAltura;
-    ui->tab_2->setLimitsLineEAltura(newSrvK.m_fAltura);
-    ui->tab_2->m_srvK.m_fYMin = newSrvK.m_fYMin;
-    ui->tab_2->setLimitsLineEYmin(newSrvK.m_fYMin);
-    ui->tab_2->m_srvK.m_fYMax = newSrvK.m_fYMax;
-    ui->tab_2->setLimitsLineEYmax(newSrvK.m_fYMax);
-    ui->tab_2->m_srvK.m_fZMax = newSrvK.m_fZMax;
-    ui->tab_2->setLimitsLineEZmax(newSrvK.m_fZMax);
 
-    ui->tab_2->m_srvK.m_ulRefresco3D = newSrvK.m_ulRefresco3D;
-    ui->tab_2->setPointsSlider(newSrvK.m_ulRefresco3D);
-    ui->tab_2->m_srvK.m_usModulo3D = newSrvK.m_usModulo3D;
-    ui->tab_2->setPointsSliderM(newSrvK.m_usModulo3D);
-
-    ui->tab_2->m_srvK.m_bEnvio3D = newSrvK.m_bEnvio3D;
-    ui->tab_2->setPointsCBenvio3D(newSrvK.m_bEnvio3D);
-    ui->tab_2->m_srvK.m_bEnvio2D = newSrvK.m_bEnvio2D;
-    ui->tab_2->setPointsCBenvio2(newSrvK.m_bEnvio2D);
-    ui->tab_2->m_srvK.m_bEnvioBarrido = newSrvK.m_bEnvioBarrido;
-    ui->tab_2->setPointsCBenvioB(newSrvK.m_bEnvioBarrido);
-    ui->tab_2->m_srvK.m_bCompress3D = newSrvK.m_bCompress3D;
-    ui->tab_2->setPointsCBcomprimido(newSrvK.m_bCompress3D);
-    ui->tab_2->m_srvK.m_iBarridoEcu = newSrvK.m_iBarridoEcu;
-    ui->tab_2->setPointsLineEEcu(newSrvK.m_iBarridoEcu);
-    ui->tab_2->m_srvK.m_iBarridoYMin = newSrvK.m_iBarridoYMin;
-    ui->tab_2->setPointsLineEYmin(newSrvK.m_iBarridoYMin);
-    ui->tab_2->m_srvK.m_iBarridoYMax = newSrvK.m_iBarridoYMax;
-    ui->tab_2->setPointsLineEYmax(newSrvK.m_iBarridoYMax);
-
-    ui->tab_2->m_srvK.m_ulRefrescoDepth = newSrvK.m_ulRefrescoDepth;
-    ui->tab_2->setDepthSlider(newSrvK.m_ulRefrescoDepth);
-    ui->tab_2->m_srvK.m_bEnvioDepth = newSrvK.m_bEnvioDepth;
-    ui->tab_2->setDepthCBenvio(newSrvK.m_bEnvioDepth);
-    ui->tab_2->m_srvK.m_bCompressDepth = newSrvK.m_bCompressDepth;
-    ui->tab_2->setDepthCBcomprimido(newSrvK.m_bCompressDepth);
-    ui->tab_2->m_srvK.m_ulRefrescoColor = newSrvK.m_ulRefrescoColor;
-    ui->tab_2->setVideoSlider(newSrvK.m_ulRefrescoColor);
-    ui->tab_2->m_srvK.m_bEnvioColor = newSrvK.m_bEnvioColor;
-    ui->tab_2->setVideoCBenvio(newSrvK.m_bEnvioColor);
-    ui->tab_2->m_srvK.m_bCompressColor = newSrvK.m_bCompressColor;
-    ui->tab_2->setVideoCBcomprimido(newSrvK.m_bCompressColor);
-
-    emit updateKinect();
+}
+/*!
+ * \brief aux function to control time spend in calculus or painting.
+ */
+void MainWindow::printTimeVector()
+{
+    //qDebug("MainWindow::printTimeVector");
+    QString str,aux;
+    accel a(apicore->getAccel());
+    str = "get video = ";
+    aux.setNum(apicore->getTime(e_video));
+    str.append(aux);
+    aux = " \nget depth = ";
+    str.append(aux);
+    aux.setNum(apicore->getTime(e_depth));
+    str.append(aux);
+    aux = " \nget 3D = ";
+    str.append(aux);
+    aux.setNum(apicore->getTime(e_3));
+    str.append(aux);
+    aux = "\nget 2D = ";
+    str.append(aux);
+    aux.setNum(apicore->getTime(e_2));
+    str.append(aux);
+    aux = "\nget Barrido = ";
+    str.append(aux);
+    aux.setNum(apicore->getTime(e_barrido));
+    str.append(aux);
+    //pinta las aceleraciones----------------------accel
+    aux = "\n  accel X = ";
+    str.append(aux);
+    aux.setNum(a.accel_x);
+    str.append(aux);
+    aux = "\n  accel Y = ";
+    str.append(aux);
+    aux.setNum(a.accel_y);
+    str.append(aux);
+    aux = "\n  accel Z = ";
+    str.append(aux);
+    aux.setNum(a.accel_z);
+    str.append(aux);
+    ui->textEdit->setText(str);
 }
 
+void MainWindow::setSrvKinect(srvKinect newSrvK)
+{
+    //qDebug("MainWindow::setSrvKinect");
+    QString auxStr;
+    ui->le_limits_kbaseangle->setText(auxStr.setNum(newSrvK.m_fAngulo));
+    ui->le_limits_kangle->setText(auxStr.setNum(newSrvK.m_iAnguloKinect));
+    ui->le_limits_high->setText(auxStr.setNum(newSrvK.m_fAltura));
+    ui->le_limits_Ymin->setText(auxStr.setNum(newSrvK.m_fYMin));
+    ui->le_limits_Ymax->setText(auxStr.setNum(newSrvK.m_fYMax));
+    ui->le_limits_Zmax->setText(auxStr.setNum(newSrvK.m_fZMax));
+    ui->slider_D_refresh->setValue(newSrvK.m_ulRefresco3D);
+    ui->slider_D_module->setValue(newSrvK.m_usModulo3D);
+    if(newSrvK.m_bEnvio3D) ui->cb_3->setChecked(true);
+    else ui->cb_3->setChecked(false);
+    if(newSrvK.m_bEnvio2D) ui->cb_2->setChecked(true);
+    else ui->cb_2->setChecked(false);
+    if(newSrvK.m_bEnvioBarrido) ui->cb_barrido->setChecked(true);
+    else ui->cb_barrido->setChecked(false);
+
+}
 /*!
  * \brief convenience function to initiate members
  */
+
+/*!
+ * \brief override window close event to stop loop and delete apikinect handler.
+ * \param [in] event
+ */
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    qDebug("MainWindow::closeEvent()");
+    //this->~MainWindow();//no es aquí, mira QTcpServer o sockets, peta si cierras tras conectar
+    //exit(0);
+}
+
 void MainWindow::init()
 {
-    //apikinect
-//    device = NULL;
-    currentDeviceIndex = -1;
-    flag = false;
-/*    videoBuf.resize(640*480*3);
-    depthBuf.resize(640*480);
-    p3Buf.reserve(300000);//max number of points
-    p3Buf.resize(0);//initially we have none
-    p2Buf.reserve(300000);
-    p2Buf.resize(0);
-    barridoBuf.resize(360);
-    a.accel_x = a.accel_y = a.accel_z = 0;
-    structBuffers.ptrVideoBuf = &videoBuf;
-    structBuffers.ptrDepthBuf = &depthBuf;
-    structBuffers.ptrP3Buf = &p3Buf;
-    structBuffers.ptrP2Buf = &p2Buf;
-    structBuffers.ptrBarridoBuf = &barridoBuf;
-    structBuffers.ptrAccel = &a;
     ellipseVector.reserve(360);
     ellipseVector.resize(0);
     sceneVideo = new QGraphicsScene;
@@ -238,10 +237,6 @@ void MainWindow::init()
     ui->gvVideo->setScene(sceneVideo);
     ui->gvDepth->setScene(sceneDepth);
     ui->gvBarrido->setScene(sceneBarre);
-    timeVector.resize(e_xtra);
-    //server
-    mainServer = new QTcpServer(this);
-*/
 }
 /*!
  * \brief write my server ip on gui label
@@ -266,65 +261,37 @@ void MainWindow::setServerIp()
  */
 void MainWindow::putKcombo()
 {
-    if( numDevices == 0 ){//num devices 0 => no kinect connected
+
+    if( apicore->numKinects == 0 ){//num devices 0 => no kinect connected
         ui->combo->addItem("No kinect detected");
         ui->textEdit->setText(" No kinect detected, unable to start");
         ui->textEdit->show();
         ui->pbGo->setEnabled(false);
         ui->pbStop->setEnabled(false);
     }else{
-        for( int i = 0; i < numDevices ; i++){
+        for( int i = 0; i < apicore->numKinects ; i++){
             QString str;
             ui->combo->addItem(str.setNum(i));
         }
         ui->textEdit->setText(" Select kinect in combo box to start\n1-click combo\n2-click device number in combo\n3-click Go");
     }
 }
-
 /*!
- * \brief aux function to control time spend in calculus or painting.
- * \param [out] timeV vector to save data.
+ * \brief connect data tab_2 widgets
  */
-void MainWindow::printTimeVector(std::vector<int> &timeV)
+void MainWindow::initconnects()
 {
-    QString str,aux;
-    accel a;
-
-    str = "get video = ";
-    aux.setNum(timeVector[e_video]);
-    str.append(aux);
-    aux = " \nget depth = ";
-    str.append(aux);
-    aux.setNum(timeVector[e_depth]);
-    str.append(aux);
-    aux = " \nget 3D = ";
-    str.append(aux);
-    aux.setNum(timeVector[e_3]);
-    str.append(aux);
-    aux = "\nget 2D = ";
-    str.append(aux);
-    aux.setNum(timeV[e_2]);
-    str.append(aux);
-    aux = "\nget Barrido = ";
-    str.append(aux);
-    aux.setNum(timeV[e_barrido]);
-    str.append(aux);
-    //pinta las aceleraciones----------------------accel
-    aux = "\n  accel X = ";
-    str.append(aux);
-//    aux.setNum(a.accel_x);
-    str.append(aux);
-    aux = "\n  accel Y = ";
-    str.append(aux);
-    aux.setNum(a.accel_y);
-    str.append(aux);
-    aux = "\n  accel Z = ";
-    str.append(aux);
-    aux.setNum(a.accel_z);
-    str.append(aux);
-    ui->textEdit->setText(str);
+    //connect line edit -> slider value
+    connect(ui->le_video,SIGNAL(textChanged(QString)),this,SLOT(sliderVideoUp(QString)));
+    connect(ui->le_depth,SIGNAL(textChanged(QString)),this,SLOT(sliderDepthUp(QString)));
+    connect(ui->le_D_refresh,SIGNAL(textChanged(QString)),this,SLOT(slider3DUp(QString)));
+    connect(ui->le_D_module,SIGNAL(textChanged(QString)),this,SLOT(sliderModuleUp(QString)));
+    //connect slider -> line edit text
+    connect(ui->slider_video,SIGNAL(sliderMoved(int)),ui->le_video,SLOT(setNum(int)));
+    connect(ui->slider_depth,SIGNAL(sliderMoved(int)),ui->le_depth,SLOT(setNum(int)));
+    connect(ui->slider_D_refresh,SIGNAL(sliderMoved(int)),ui->le_D_refresh,SLOT(setNum(int)));
+    connect(ui->slider_D_module,SIGNAL(sliderMoved(int)),ui->le_D_module,SLOT(setNum(int)));
 }
-
 /*!
  * \brief start selected kinect data flow
  */
@@ -333,7 +300,7 @@ void MainWindow::on_pbGo_clicked()///--------------------------DEBUG
     ui->pbGo->setEnabled(false);
     int index = ui->combo->currentText().toInt();
 //    startK(index);
-    currentDeviceIndex = index;
+    apicore->currentKIndex = index;
 //    loop();
 }
 /*!
@@ -344,22 +311,10 @@ void MainWindow::on_pbStop_clicked()
     ui->pbStop->setEnabled(false);
 //    stoploop();
     int index = ui->combo->currentText().toInt();
-    if( index == currentDeviceIndex ){
+    if( index == apicore->currentKIndex ){
 //        stopK(index);
     }
 }
-
-/*!
- * \brief override window close event to stop loop and delete apikinect handler.
- * \param [in] event
- */
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    qDebug("MainWindow::closeEvent()");
-    //this->~MainWindow();//no es aquí, mira QTcpServer o sockets, peta si cierras tras conectar
-    //exit(0);
-}
-
 /*!
  * \brief when combo item selected -> buttons activated
  * \param [in] index
@@ -367,17 +322,93 @@ void MainWindow::closeEvent(QCloseEvent *event)
  */
 void MainWindow::on_combo_highlighted(int index)
 {
-    if ( index < 0 || index >= numDevices ){
+    if ( index < 0 || index >= apicore->numKinects ){
         ui->textEdit->setText(" ERROR kinect index out of bounds. Restart.");
         return;
     }
-    if( currentDeviceIndex == -1 ){
+    if( apicore->currentKIndex == -1 ){
         ui->pbGo->setEnabled(true);
         ui->pbStop->setEnabled(false);
-    }else if( currentDeviceIndex == index ){
+    }else if( apicore->currentKIndex == index ){///Recuera apagar k activo antes de activar otro k
         ui->pbGo->setEnabled(false);
         ui->pbStop->setEnabled(true);
     }else{
         ui->textEdit->setText(" First stop running active kinect, then start the other one selected.");
     }
+}
+/*!
+ * \brief utility function to link video slider and line edit
+ * \param s
+ */
+void MainWindow::sliderVideoUp(QString s)
+{
+    int i = s.toInt();
+    if( i == ui->slider_video->value() ) return;
+    if( i< 33 ){
+        i = 33;
+        ui->le_video->setText(s.setNum(i));
+    }
+    if( i>2000 ){
+        i=2000;
+        ui->le_video->setText(s.setNum(i));
+    }
+    ui->le_video->setText(s.setNum(i));
+    ui->slider_video->setSliderPosition(i);
+}
+/*!
+ * \brief utility function to link depth slider and line edit
+ * \param s
+ */
+void MainWindow::sliderDepthUp(QString s)
+{
+    int i = s.toInt();
+    if( i == ui->slider_depth->value() ) return;
+    if( i< 33 ){
+        i = 33;
+        ui->le_depth->setText(s.setNum(i));
+    }
+    if( i>2000 ){
+        i=2000;
+        ui->le_depth->setText(s.setNum(i));
+    }
+    ui->le_depth->setText(s.setNum(i));
+    ui->slider_depth->setSliderPosition(i);
+}
+/*!
+ * \brief utility function to link 3D slider and line edit
+ * \param s
+ */
+void MainWindow::slider3DUp(QString s)
+{
+    int i = s.toInt();
+    if( i == ui->slider_D_refresh->value() ) return;
+    if( i< 33 ){
+        i = 33;
+        ui->le_D_refresh->setText(s.setNum(i));
+    }
+    if( i>2000 ){
+        i=2000;
+        ui->le_D_refresh->setText(s.setNum(i));
+    }
+    ui->le_D_refresh->setText(s.setNum(i));
+    ui->slider_D_refresh->setSliderPosition(i);
+}
+/*!
+ * \brief utility function to link module slider and line edit
+ * \param s
+ */
+void MainWindow::sliderModuleUp(QString s)
+{
+    int i = s.toInt();
+    if( i == ui->slider_D_module->value() ) return;
+    if( i< 1 ){
+        i = 1;
+        ui->le_D_module->setText(s.setNum(i));
+    }
+    if( i>10 ){
+        i=10;
+        ui->le_D_module->setText(s.setNum(i));
+    }
+    ui->le_D_module->setText(s.setNum(i));
+    ui->slider_D_module->setSliderPosition(i);
 }
