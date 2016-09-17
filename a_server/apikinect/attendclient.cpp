@@ -9,6 +9,8 @@
 
 #include <vector>
 #include <QTimer>
+#include <QDataStream>
+#include <QImage>
 #include "attendclient.h"
 
 /*!

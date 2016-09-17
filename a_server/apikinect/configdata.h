@@ -10,87 +10,34 @@
 #ifndef DATOS_H
 #define DATOS_H
 
-#include <QWidget>
-#include <QGroupBox>
-#include <QRadioButton>
-#include <QButtonGroup>
-#include <QCheckBox>
-#include <QLineEdit>
-#include <QSlider>
-#include <QLabel>
-#include <QLayout>
+#include <QObject>
 #include "typekinect.h"
 
-class ConfigData : public QWidget
+class ConfigData : public QObject
 {
     Q_OBJECT
 public:
-    explicit ConfigData(QWidget *parent = 0);
-    srvKinect srvK;
-    int ledOption;
+    explicit ConfigData(QObject *parent = 0);
 
-    void setLimitsLineEAngulo(double value);
-    void setLimitsLineEAngK(int8_t value);
-    void setLimitsLineEAltura(double value);
-    void setLimitsLineEYmin(double value);
-    void setLimitsLineEYmax(double value);
-    void setLimitsLineEZmax(double value);
-    void setPointsSlider(uint32_t value);
-    void setPointsSliderM(uint8_t value);
-    void setPointsCBenvio3D(uint8_t value);
-    void setPointsCBenvio2(uint8_t value);
-    void setPointsCBenvioB(uint8_t value);
-    void setPointsCBcomprimido(uint8_t value);
-    void setPointsLineEEcu(int32_t value);
-    void setPointsLineEYmin(int32_t value);
-    void setPointsLineEYmax(int32_t value);
-    void setDepthSlider(uint32_t value);
-    void setDepthCBenvio(uint8_t value);
-    void setDepthCBcomprimido(uint8_t value);
-    void setVideoSlider(uint32_t value);
-    void setVideoCBenvio(uint8_t value);
-    void setVideoCBcomprimido(uint8_t value);
+
 
 signals:
-    void ledOptionChanged();
-    void configDataChanged();
     void srvKChanged(srvKinect newSrvK);
+    void ledOptionChanged(int option);
+    void configDataChanged();
 
 public slots:
-    void setLedOption(int option);
+    int getIrOption() const;
+    void setIrOption(int value);
     int getLedOption();
-    void setConfigData();
-    void setSrvK(srvKinect newSrvK);
+    void setLedOption(int option);
     srvKinect getSrvK();
+    void setSrvK(srvKinect newSrvK);
 
 private:
-//  tab_2 ConfigData
-    QLineEdit *LimitsLineEAngulo;
-    QLineEdit *LimitsLineEAngK;
-    QLineEdit *LimitsLineEAltura;
-    QLineEdit *LimitsLineEYmin;
-    QLineEdit *LimitsLineEYmax;
-    QLineEdit *LimitsLineEZmax;
-    QSlider *PointsSlider;
-    QLabel *PointsLabelSlider;
-    QSlider *PointsSliderM;
-    QLabel *PointsLabelSliderM;
-    QCheckBox *PointsCBenvio3D;
-    QCheckBox *PointsCBenvio2;
-    QCheckBox *PointsCBenvioB;
-    QCheckBox *PointsCBcomprimido;
-    QLineEdit *PointsLineEEcu;
-    QLineEdit *PointsLineEYmin;
-    QLineEdit *PointsLineEYmax;
-    QSlider *DepthSlider;
-    QLabel *DepthLabelSlider;
-    QCheckBox *DepthCBenvio;
-    QCheckBox *DepthCBcomprimido;
-    QSlider *VideoSlider;
-    QLabel *VideoLabelSlider;
-    QCheckBox *VideoCBenvio;
-    QCheckBox *VideoCBcomprimido;
-    QButtonGroup *ledGroup;
+    srvKinect srvK;
+    int ledOption;
+    int irOption;
 };
 
 #endif // DATOS_H

@@ -10,11 +10,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QMainWindow>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
-#include <QMainWindow>
 #include "apikinect/typekinect.h"
 #include "apikinect/maincore.h"
+
+class QGraphicsScene;
+class QGraphicsItem;
 
 namespace Ui {
 class MainWindow;
@@ -30,7 +33,8 @@ public:
 
 signals:
     void srvKinectChanged(srvKinect newSrvK);
-    void ledChanged(freenect_led_options lop);
+    void ledChanged(int lop);
+    void irChanged(int i);
     void go(int kindex);
     void stop(int kindex);
 
@@ -42,9 +46,9 @@ public slots:
     void paint3D();
     void paint2D();
     void printTimeVector();
-    void updateSrvKinect(srvKinect newSrvK);
-    void setSrvKinect(srvKinect newSrvK);//->ConfigData
-    srvKinect getSrvKinect();//<-ConfigData
+    void updateSrvKinect(srvKinect newSrvK);//ConfigData => ui->tab_2
+    void setSrvKinect(srvKinect newSrvK);
+    srvKinect getSrvKinect();//ui->tab_2 => ConfigData
 
 protected:
     void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
@@ -54,7 +58,7 @@ private slots:
     void setServerIp();
     void putKcombo();
     void initconnects();
-
+    //gui interactions
     void on_pbGo_clicked();
     void on_pbStop_clicked();
     void on_combo_highlighted(int index);
@@ -75,6 +79,6 @@ private:
     QGraphicsEllipseItem *ellipse;//!< holds single Barrido point to add to sceneBarre
     std::vector<QGraphicsEllipseItem*> ellipseVector;//!< holds Barrido points to paint in ellipse
 
-    MainCore * apicore;
+    MainCore * apicore;//!< handle all kinect+server+client interactions
 };
 #endif // MAINWINDOW_H

@@ -32,9 +32,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     init();
     setServerIp();
-    putKcombo();//fill combo box with available kinects
+    putKcombo();//fill combo box with available kinects  ///AQUI PETA
     paintBarridoAxes();//paint axes on barrido view
-    initconnects();
+//    initconnects();
 }
 /*!
  * \brief destructor
@@ -63,7 +63,7 @@ MainWindow::~MainWindow()
 void MainWindow::paintVideo()
 {
     if( imgVideo != NULL ) delete imgVideo;
-//    imgVideo = new QImage(videoBuf.data(),640,480,QImage::Format_RGB888);
+    imgVideo = new QImage(apicore->videoBuf.data(),640,480,QImage::Format_RGB888);
     sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(ui->gvVideo->width()-2,ui->gvVideo->height()-2,Qt::KeepAspectRatio));
     //sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(320,240,Qt::KeepAspectRatio));
     ui->gvVideo->show();
@@ -188,8 +188,11 @@ void MainWindow::printTimeVector()
     str.append(aux);
     ui->textEdit->setText(str);
 }
-
-void MainWindow::setSrvKinect(srvKinect newSrvK)
+/*!
+ * \brief set ConfigData gui as newSrvK says
+ * \param newSrvK
+ */
+void MainWindow::updateSrvKinect(srvKinect newSrvK)
 {
     //qDebug("MainWindow::setSrvKinect");
     QString auxStr;
@@ -198,20 +201,75 @@ void MainWindow::setSrvKinect(srvKinect newSrvK)
     ui->le_limits_high->setText(auxStr.setNum(newSrvK.m_fAltura));
     ui->le_limits_Ymin->setText(auxStr.setNum(newSrvK.m_fYMin));
     ui->le_limits_Ymax->setText(auxStr.setNum(newSrvK.m_fYMax));
-    ui->le_limits_Zmax->setText(auxStr.setNum(newSrvK.m_fZMax));
+    ui->le_limits_Zmax->setText(auxStr.setNum(newSrvK.m_fZMax));//---------6/21
+
     ui->slider_D_refresh->setValue(newSrvK.m_ulRefresco3D);
     ui->slider_D_module->setValue(newSrvK.m_usModulo3D);
-    if(newSrvK.m_bEnvio3D) ui->cb_3->setChecked(true);
-    else ui->cb_3->setChecked(false);
-    if(newSrvK.m_bEnvio2D) ui->cb_2->setChecked(true);
-    else ui->cb_2->setChecked(false);
-    if(newSrvK.m_bEnvioBarrido) ui->cb_barrido->setChecked(true);
-    else ui->cb_barrido->setChecked(false);
+    if(newSrvK.m_bEnvio3D) ui->cb_D_3->setChecked(true);
+    else ui->cb_D_3->setChecked(false);
+    if(newSrvK.m_bEnvio2D) ui->cb_D_2->setChecked(true);
+    else ui->cb_D_2->setChecked(false);
+    if(newSrvK.m_bEnvioBarrido) ui->cb_D_barrido->setChecked(true);
+    else ui->cb_D_barrido->setChecked(false);
+    if(newSrvK.m_bCompress3D) ui->cb_D_comp->setChecked(true);
+    else ui->cb_D_comp->setChecked(false);
+    ui->le_D_ecu->setText(auxStr.setNum(newSrvK.m_iBarridoEcu));
+    ui->le_D_Ymin->setText(auxStr.setNum(newSrvK.m_iBarridoYMin));
+    ui->le_D_Ymax->setText(auxStr.setNum(newSrvK.m_iBarridoYMax));//-------15/21
 
+    ui->slider_depth->setValue(newSrvK.m_ulRefrescoDepth);
+    if(newSrvK.m_bEnvioDepth) ui->cb_depth->setChecked(true);
+    else ui->cb_depth->setChecked(false);
+    if(newSrvK.m_bCompressDepth) ui->cb_depth_comp->setChecked(true);
+    else ui->cb_depth_comp->setChecked(false);//---------------------------18/21
+
+    ui->slider_video->setValue(newSrvK.m_ulRefrescoColor);
+    if(newSrvK.m_bEnvioColor) ui->cb_video->setChecked(true);
+    else ui->cb_depth->setChecked(false);
+    if(newSrvK.m_bCompressColor) ui->cb_video_comp->setChecked(true);
+    else ui->cb_video_comp->setChecked(false);//---------------------------21/21
 }
 /*!
- * \brief convenience function to initiate members
+ * \brief its updateSrvKinect() as setter
+ * \param newSrvK
  */
+void MainWindow::setSrvKinect(srvKinect newSrvK)
+{
+    updateSrvKinect(newSrvK);
+}
+/*!
+ * \brief return srvKinect obtained from ConfigData gui
+ * \return srvKinect obtained from ConfigData gui
+ */
+srvKinect MainWindow::getSrvKinect()
+{
+    srvKinect srvK;
+    srvK.m_fAngulo = ui->le_limits_kbaseangle->text().toDouble();
+    srvK.m_iAnguloKinect = ui->le_limits_kangle->text().toInt();
+    srvK.m_fAltura = ui->le_limits_high->text().toFloat();
+    srvK.m_fYMin = ui->le_limits_Ymin->text().toFloat();
+    srvK.m_fYMax = ui->le_limits_Ymax->text().toFloat();
+    srvK.m_fZMax =  ui->le_limits_Zmax->text().toFloat();//-------------6/21
+
+    srvK.m_ulRefresco3D = ui->slider_D_refresh->value();
+    srvK.m_usModulo3D = ui->slider_D_module->value();
+    srvK.m_bEnvio3D = ui->cb_D_3->isChecked();
+    srvK.m_bEnvio2D = ui->cb_D_2->isChecked();
+    srvK.m_bEnvioBarrido = ui->cb_D_barrido->isChecked();
+    srvK.m_bCompress3D = ui->cb_D_comp->isChecked();
+    srvK.m_iBarridoEcu = ui->le_D_ecu->text().toInt();
+    srvK.m_iBarridoYMin = ui->le_D_Ymin->text().toInt();
+    srvK.m_iBarridoYMax = ui->le_D_Ymax->text().toInt();//-------------15/21
+
+    srvK.m_ulRefrescoDepth = ui->slider_depth->value();
+    srvK.m_bEnvioDepth = ui->cb_depth_send->isChecked();
+    srvK.m_bCompressDepth = ui->cb_depth_comp->isChecked();
+    srvK.m_ulRefrescoColor = ui->slider_video->value();
+    srvK.m_bEnvioColor = ui->cb_video_send->isChecked();
+    srvK.m_bCompressColor = ui->cb_video_comp->isChecked();//----------21/21
+
+    return srvK;
+}
 
 /*!
  * \brief override window close event to stop loop and delete apikinect handler.
@@ -224,8 +282,12 @@ void MainWindow::closeEvent(QCloseEvent *event)
     //exit(0);
 }
 
+/*!
+ * \brief MainWindow::init
+ */
 void MainWindow::init()
 {
+    apicore = new MainCore(this);
     ellipseVector.reserve(360);
     ellipseVector.resize(0);
     sceneVideo = new QGraphicsScene;
@@ -262,14 +324,14 @@ void MainWindow::setServerIp()
 void MainWindow::putKcombo()
 {
 
-    if( apicore->numKinects == 0 ){//num devices 0 => no kinect connected
+    if( apicore->getKnumber() == 0 ){//num devices 0 => no kinect connected
         ui->combo->addItem("No kinect detected");
         ui->textEdit->setText(" No kinect detected, unable to start");
         ui->textEdit->show();
         ui->pbGo->setEnabled(false);
         ui->pbStop->setEnabled(false);
     }else{
-        for( int i = 0; i < apicore->numKinects ; i++){
+        for( int i = 0; i < apicore->getKnumber() ; i++){
             QString str;
             ui->combo->addItem(str.setNum(i));
         }
@@ -299,8 +361,9 @@ void MainWindow::on_pbGo_clicked()///--------------------------DEBUG
 {
     ui->pbGo->setEnabled(false);
     int index = ui->combo->currentText().toInt();
-//    startK(index);
-    apicore->currentKIndex = index;
+    apicore->setCurrentKIndex(index);
+//    apicore->startK(index);
+
 //    loop();
 }
 /*!
@@ -311,7 +374,7 @@ void MainWindow::on_pbStop_clicked()
     ui->pbStop->setEnabled(false);
 //    stoploop();
     int index = ui->combo->currentText().toInt();
-    if( index == apicore->currentKIndex ){
+    if( index == apicore->getCurrentKIndex() ){
 //        stopK(index);
     }
 }
@@ -322,14 +385,14 @@ void MainWindow::on_pbStop_clicked()
  */
 void MainWindow::on_combo_highlighted(int index)
 {
-    if ( index < 0 || index >= apicore->numKinects ){
+    if ( index < 0 || index >= apicore->getKnumber() ){
         ui->textEdit->setText(" ERROR kinect index out of bounds. Restart.");
         return;
     }
-    if( apicore->currentKIndex == -1 ){
+    if( apicore->getCurrentKIndex() == -1 ){
         ui->pbGo->setEnabled(true);
         ui->pbStop->setEnabled(false);
-    }else if( apicore->currentKIndex == index ){///Recuera apagar k activo antes de activar otro k
+    }else if( apicore->getCurrentKIndex() == index ){///Recuerda apagar k activo antes de activar otro k
         ui->pbGo->setEnabled(false);
         ui->pbStop->setEnabled(true);
     }else{

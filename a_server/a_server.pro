@@ -45,5 +45,5 @@ LIBS    += -L ./apikinect/lib -lfreenect -lusb-1.0 -lGLU -lGLEW
 # INCLUDEPATH += tell QT where do you hide your include's
 INCLUDEPATH += ./apikinect/include
 
-# due to problems compiling std::vector std::mutex and so on?????
+# due to problems compiling std::vector std::mutex and so on
 QMAKE_CXXFLAGS  += -std=gnu++11

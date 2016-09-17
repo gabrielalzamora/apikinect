@@ -429,14 +429,17 @@
           </layout>
          </item>
          <item>
-          <widget class="QCheckBox" name="cb_video_send_2">
+          <widget class="QCheckBox" name="cb_depth_send">
            <property name="text">
             <string>send</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="cb_video_comp_2">
+          <widget class="QCheckBox" name="cb_depth_comp">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>compressed</string>
            </property>
@@ -524,6 +527,9 @@
          </item>
          <item>
           <widget class="QCheckBox" name="cb_video_comp">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>compressed</string>
            </property>
@@ -707,7 +713,7 @@
           </widget>
          </item>
          <item row="6" column="0">
-          <widget class="QCheckBox" name="cb_D_send">
+          <widget class="QCheckBox" name="cb_D_barrido">
            <property name="minimumSize">
             <size>
              <width>90</width>
@@ -787,6 +793,9 @@
          </item>
          <item row="7" column="2">
           <widget class="QLineEdit" name="le_D_ecu">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>50</width>
@@ -809,6 +818,9 @@
          </item>
          <item row="7" column="0">
           <widget class="QCheckBox" name="cb_D_comp">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>90</width>
@@ -831,7 +843,7 @@
         <zorder>cb_D_3</zorder>
         <zorder>l_D_module</zorder>
         <zorder>cb_D_2</zorder>
-        <zorder>cb_D_send</zorder>
+        <zorder>cb_D_barrido</zorder>
         <zorder>l_D_Ymin</zorder>
         <zorder>le_D_Ymin</zorder>
         <zorder>l_D_ecu</zorder>
@@ -975,6 +987,9 @@
          </item>
          <item row="1" column="1" rowspan="2">
           <widget class="QLineEdit" name="le_limits_kbaseangle">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="minimumSize">
             <size>
              <width>50</width>
@@ -1141,6 +1156,9 @@
         </layout>
        </widget>
        <widget class="QCheckBox" name="cb_ir">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="geometry">
          <rect>
           <x>440</x>
