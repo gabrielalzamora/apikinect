@@ -27,6 +27,7 @@
 ConfigData::ConfigData(QObject *parent) : QObject(parent)
 {
     ledOption = 0;//led off
+    irOption = 0;//ir off => video on
     srvK.m_fAngulo = 0.0;//not used
     srvK.m_iAnguloKinect = 0;//level
     srvK.m_fAltura = 0.56;//camera hight above ground level in meters
@@ -110,6 +111,16 @@ srvKinect ConfigData::getSrvK()
     return srvK;
 }
 /*!
+ * \brief setter for irOption
+ * \param value 0 means not checked, otherwise means it's checked
+ */
+void ConfigData::setIrOption(int value)
+{
+    if(value != irOption ){
+        irOption = value;
+        emit irOptionChanged(value);
+    }
+}/*!
  * \brief getter for irOption
  * \return return 0 if ir is not checked, 1 if checked
  */
@@ -117,13 +128,3 @@ int ConfigData::getIrOption() const
 {
     return irOption;
 }
-/*!
- * \brief setter for irOption
- * \param value 0 means not checked, otherwise means it's checked
- */
-void ConfigData::setIrOption(int value)
-{
-    irOption = value;
-}
-
-

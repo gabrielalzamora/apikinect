@@ -8,9 +8,15 @@
  * https://www.gnu.org/licenses/gpl.html
  */
 
-#include <QNetworkInterface>
+
 #include "maincore.h"
+//#include <QNetworkInterface>
+#include <QTcpServer>
+#include <QTimer>
 #include "apikinect.h"
+#include "attendclient.h"
+#include "framegl.h"
+#include "configdata.h"
 
 /*!
  * \class MainCore
@@ -86,7 +92,7 @@ void MainCore::updateKinect()
 {
     if( device != NULL ){
         device->setLed(freenect_led_options(config->getLedOption()));
-        device->setTiltDegrees(double(config->getSrvK().m_iAnguloKinect));
+        device->setTiltDegrees(double(config->srvK.m_iAnguloKinect));
     }
 }
 /*!
@@ -142,6 +148,18 @@ accel MainCore::getAccel()
     return a;
 }
 
+/*!
+ * \brief MainCore::go
+ */
+void MainCore::go()
+{
+    nextVideoFrame();
+    timerVideo->start(config->srvK.m_ulRefrescoColor);
+    nextDepthFrame();
+    timerDepth->start(config->srvK.m_ulRefrescoDepth);
+    next3DFrame();
+    timer3D->start(config->srvK.m_ulRefresco3D);
+}
 
 /*!
  * \brief convenience function to initiate members
@@ -153,6 +171,8 @@ void MainCore::init()
     numKinects = getKnumber();
     currentKIndex = -1;
     flag = false;
+    //config data
+    config = new ConfigData(this);
     //buffers
     videoBuf.resize(640*480*3);
     depthBuf.resize(640*480);
@@ -172,6 +192,13 @@ void MainCore::init()
     structBuffers.ptrAccel = &a;
     //server
     server = new QTcpServer(this);
+    //timers
+    timer3D = new QTimer(this);
+    timerDepth = new QTimer(this);
+    timerVideo = new QTimer(this);
+    connect(timer3D,SIGNAL(timeout()),this,SLOT(next3DFrame()));
+    connect(timerDepth,SIGNAL(timeout()),this,SLOT(nextDepthFrame()));
+    connect(timerVideo,SIGNAL(timeout()),this,SLOT(nextVideoFrame()));
 }
 
 
@@ -199,4 +226,59 @@ void MainCore::attendNewClient()///------test with concurrent clients----------D
     //attendVector.push_back(attendant);
 
     connect(attendant,SIGNAL(newSrvKinect(srvKinect)),this,SLOT(updateSrvKinect(srvKinect)));
+}
+
+/*!
+ * \brief MainCore::nextVideoFrame
+ */
+void MainCore::nextVideoFrame()
+{
+    device->getRGB(videoBuf);
+    emit printVideo();
+}
+/*!
+ * \brief MainCore::nextDepthFrame
+ */
+void MainCore::nextDepthFrame()
+{
+    device->getDepth(depthBuf);
+    emit printDepth();
+}
+/*!
+ * \brief calculate 3D points in different formats
+ *
+ * Calculate from video + depth what is going to be sended
+ * to client so you cannot show what you don't serve
+ */
+void MainCore::next3DFrame()
+{
+    if( config->srvK.m_bEnvio3D && config->srvK.m_bEnvio2D && config->srvK.m_bEnvioBarrido ){
+        ///------------------------------------------------------------------TIEMPOS, parte se calcula aquí
+        ///------------------------------------------------------------------
+        device->getAll( &structBuffers, &config->srvK );
+        emit print3D();
+        emit print2D();
+        emit printBarrido();
+    }else if (config->srvK.m_bEnvio3D && config->srvK.m_bEnvio2D) {
+        device->get2and3( &structBuffers, &config->srvK );
+        emit print3D();
+        emit print2D();
+    }else if (config->srvK.m_bEnvio3D && config->srvK.m_bEnvioBarrido) {
+        device->get3dBarrido( &structBuffers, &config->srvK );
+        emit print3D();
+        emit printBarrido();
+    }else if (config->srvK.m_bEnvio2D && config->srvK.m_bEnvioBarrido) {
+        device->get2dBarrido( &structBuffers, &config->srvK );
+        emit print2D();
+        emit printBarrido();
+    }else if(config->srvK.m_bEnvio3D){
+        device->get3d(&structBuffers, &config->srvK );
+        emit print3D();
+    }else if(config->srvK.m_bEnvio2D){
+        device->get2(&structBuffers, &config->srvK );
+        emit print2D();
+    }else if(config->srvK.m_bEnvioBarrido){
+        device->getBarrido(&structBuffers, &config->srvK );
+        emit printBarrido();
+    }
 }

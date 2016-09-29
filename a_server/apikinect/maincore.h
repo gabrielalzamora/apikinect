@@ -10,11 +10,13 @@
 #ifndef MainCore_H
 #define MainCore_H
 
-#include <QTcpServer>
+class QTcpServer;
+class QTimer;
+class Apikinect;
+class AttendClient;
+class FrameGL;
+class ConfigData;
 #include "apikinect.h"
-#include "attendclient.h"
-#include "framegl.h"
-#include "configdata.h"
 
 namespace Ui {
 class MainCore;
@@ -46,19 +48,27 @@ public slots:
     void startK(int indexK=0);
     void stopK(int indexK=0);
     void updateKinect();//send current ledOption and angle to kinect
+    //srvKinect
     void updateSrvKinect(srvKinect newSrvK);//set new configuration data
     //setters & getters
     void setCurrentKIndex(int index);
     int getCurrentKIndex();
     int getKnumber();
-    int getTime(eOption opt);//in milliseconds
+    int getTime(eOption opt);//in milliseconds : e_video, e_depth, e_3, e_2, e_barrido, e_accel
     accel getAccel();
+    //start timers
+    void go();//!< start sending data to mainwindow acord to configdata info
 
 private slots:
     void init();
     //server
     void startServer();
     void attendNewClient();
+    //
+
+    void nextVideoFrame();//!< convenience function to use qtimers
+    void nextDepthFrame();//!< convenience function to use qtimers
+    void next3DFrame();//!< convenience function to use qtimers
 
 protected:
 
@@ -66,6 +76,9 @@ protected:
 private:
     int numKinects;//!< number of detected kinects
     int currentKIndex;//!< index of active kinect
+    QTimer *timerVideo;
+    QTimer *timerDepth;
+    QTimer *timer3D;
 
     Freenect::Freenect freenect;//!< Freenect class object to start events thread and Apikinect
     freenect_context *context;//!< point to usb context associated to kinect data handling

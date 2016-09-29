@@ -32,9 +32,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     init();
     setServerIp();
-    putKcombo();//fill combo box with available kinects  ///AQUI PETA
+    putKcombo();//fill combo box with available kinects
     paintBarridoAxes();//paint axes on barrido view
-//    initconnects();
+    initconnects();
 }
 /*!
  * \brief destructor
@@ -81,10 +81,10 @@ void MainWindow::paintDepth()
     unsigned char r,g,b, distaChar;
     for(int x = 0; x < 640; x++){
         for(int y = 0; y < 480; y++){
-//            int value = depthBuf[(x+y*640)];//value is distance in mm
-//            distaChar = value/39;//to transform distance to 8bit grey
-//            r=g=b=distaChar;
-//            imgDepth->setPixel(x,y,qRgb(r,g,b));// data to fit in 8 bits
+            int value = apicore->depthBuf[(x+y*640)];//value is distance in mm
+            distaChar = value/39;//to transform distance to 8bit grey
+            r=g=b=distaChar;
+            imgDepth->setPixel(x,y,qRgb(r,g,b));// data to fit in 8 bits
         }
     }
     sceneDepth->addPixmap(QPixmap::fromImage(*imgDepth).scaled(ui->gvDepth->width()-2,ui->gvDepth->height()-2,Qt::KeepAspectRatio));
@@ -147,7 +147,7 @@ void MainWindow::paint2D()
 
 }
 /*!
- * \brief aux function to control time spend in calculus or painting.
+ * \brief aux function to show time spent in calculus or painting.
  */
 void MainWindow::printTimeVector()
 {
@@ -230,7 +230,7 @@ void MainWindow::updateSrvKinect(srvKinect newSrvK)
     else ui->cb_video_comp->setChecked(false);//---------------------------21/21
 }
 /*!
- * \brief its updateSrvKinect() as setter
+ * \brief its previous function: updateSrvKinect() as setter
  * \param newSrvK
  */
 void MainWindow::setSrvKinect(srvKinect newSrvK)
@@ -272,7 +272,7 @@ srvKinect MainWindow::getSrvKinect()
 }
 
 /*!
- * \brief override window close event to stop loop and delete apikinect handler.
+ * \brief override window close event to stop loop and delete apikinect handler...working
  * \param [in] event
  */
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -343,16 +343,19 @@ void MainWindow::putKcombo()
  */
 void MainWindow::initconnects()
 {
-    //connect line edit -> slider value
-    connect(ui->le_video,SIGNAL(textChanged(QString)),this,SLOT(sliderVideoUp(QString)));
-    connect(ui->le_depth,SIGNAL(textChanged(QString)),this,SLOT(sliderDepthUp(QString)));
-    connect(ui->le_D_refresh,SIGNAL(textChanged(QString)),this,SLOT(slider3DUp(QString)));
-    connect(ui->le_D_module,SIGNAL(textChanged(QString)),this,SLOT(sliderModuleUp(QString)));
+    //connect spin box -> slider value
+    connect(ui->sb_video,SIGNAL(valueChanged(int)),this,SLOT(sliderVideoUp(int)));
+    connect(ui->sb_depth,SIGNAL(valueChanged(int)),this,SLOT(sliderDepthUp(int)));
+    connect(ui->sb_D_refresh,SIGNAL(valueChanged(int)),this,SLOT(slider3DUp(int)));
+    connect(ui->sb_D_module,SIGNAL(valueChanged(int)),this,SLOT(sliderModuleUp(int)));
     //connect slider -> line edit text
-    connect(ui->slider_video,SIGNAL(sliderMoved(int)),ui->le_video,SLOT(setNum(int)));
-    connect(ui->slider_depth,SIGNAL(sliderMoved(int)),ui->le_depth,SLOT(setNum(int)));
-    connect(ui->slider_D_refresh,SIGNAL(sliderMoved(int)),ui->le_D_refresh,SLOT(setNum(int)));
-    connect(ui->slider_D_module,SIGNAL(sliderMoved(int)),ui->le_D_module,SLOT(setNum(int)));
+    connect(ui->slider_video,SIGNAL(sliderMoved(int)),ui->sb_video,SLOT(setValue(int)));
+    connect(ui->slider_depth,SIGNAL(sliderMoved(int)),ui->sb_depth,SLOT(setValue(int)));
+    connect(ui->slider_D_refresh,SIGNAL(sliderMoved(int)),ui->sb_D_refresh,SLOT(setValue(int)));
+    connect(ui->slider_D_module,SIGNAL(sliderMoved(int)),ui->sb_D_module,SLOT(setValue(int)));
+    //connect maincore signals -> this slots
+    connect(apicore,SIGNAL(printVideo()),this,SLOT(paintVideo()));
+    connect(apicore,SIGNAL(printDepth()),this,SLOT(paintDepth()));
 }
 /*!
  * \brief start selected kinect data flow
@@ -362,7 +365,8 @@ void MainWindow::on_pbGo_clicked()///--------------------------DEBUG
     ui->pbGo->setEnabled(false);
     int index = ui->combo->currentText().toInt();
     apicore->setCurrentKIndex(index);
-//    apicore->startK(index);
+    apicore->startK(index);
+    apicore->go();
 
 //    loop();
 }
@@ -403,75 +407,71 @@ void MainWindow::on_combo_highlighted(int index)
  * \brief utility function to link video slider and line edit
  * \param s
  */
-void MainWindow::sliderVideoUp(QString s)
+void MainWindow::sliderVideoUp(int i)
 {
-    int i = s.toInt();
     if( i == ui->slider_video->value() ) return;
     if( i< 33 ){
         i = 33;
-        ui->le_video->setText(s.setNum(i));
-    }
-    if( i>2000 ){
+    }else if( i>2000 ){
         i=2000;
-        ui->le_video->setText(s.setNum(i));
     }
-    ui->le_video->setText(s.setNum(i));
+    ui->sb_video->setValue(i);
     ui->slider_video->setSliderPosition(i);
 }
 /*!
  * \brief utility function to link depth slider and line edit
  * \param s
  */
-void MainWindow::sliderDepthUp(QString s)
+void MainWindow::sliderDepthUp(int i)
 {
-    int i = s.toInt();
-    if( i == ui->slider_depth->value() ) return;
-    if( i< 33 ){
+    if( i == ui->slider_depth->value() ){
+        return;
+    }else if( i< 33 ){
         i = 33;
-        ui->le_depth->setText(s.setNum(i));
-    }
-    if( i>2000 ){
+        ui->sb_depth->setValue(i);
+        return;
+    }else if( i>2000 ){
         i=2000;
-        ui->le_depth->setText(s.setNum(i));
+        ui->sb_depth->setValue(i);
+        return;
     }
-    ui->le_depth->setText(s.setNum(i));
     ui->slider_depth->setSliderPosition(i);
 }
 /*!
  * \brief utility function to link 3D slider and line edit
  * \param s
  */
-void MainWindow::slider3DUp(QString s)
+void MainWindow::slider3DUp(int i)
 {
-    int i = s.toInt();
-    if( i == ui->slider_D_refresh->value() ) return;
-    if( i< 33 ){
+    if( i == ui->slider_D_refresh->value() ){
+        return;
+    }else if( i< 33 ){
         i = 33;
-        ui->le_D_refresh->setText(s.setNum(i));
-    }
-    if( i>2000 ){
+        ui->sb_D_refresh->setValue(i);
+        return;
+    }else if( i>2000 ){
         i=2000;
-        ui->le_D_refresh->setText(s.setNum(i));
+        ui->sb_D_refresh->setValue(i);
+        return;
     }
-    ui->le_D_refresh->setText(s.setNum(i));
     ui->slider_D_refresh->setSliderPosition(i);
 }
 /*!
  * \brief utility function to link module slider and line edit
  * \param s
  */
-void MainWindow::sliderModuleUp(QString s)
+void MainWindow::sliderModuleUp(int i)
 {
-    int i = s.toInt();
-    if( i == ui->slider_D_module->value() ) return;
-    if( i< 1 ){
+    if( i == ui->slider_D_module->value() ){
+        return;
+    }if( i< 1 ){
         i = 1;
-        ui->le_D_module->setText(s.setNum(i));
-    }
-    if( i>10 ){
+        ui->sb_D_module->setValue(i);
+        return;
+    }else if( i>10 ){
         i=10;
-        ui->le_D_module->setText(s.setNum(i));
+        ui->sb_D_module->setValue(i);
+        return;
     }
-    ui->le_D_module->setText(s.setNum(i));
     ui->slider_D_module->setSliderPosition(i);
 }

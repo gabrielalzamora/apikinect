@@ -378,6 +378,12 @@
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
             <widget class="QSlider" name="slider_depth">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>22</height>
+              </size>
+             </property>
              <property name="minimum">
               <number>33</number>
              </property>
@@ -405,24 +411,12 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="le_depth">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>50</horstretch>
-               <verstretch>20</verstretch>
-              </sizepolicy>
+            <widget class="QSpinBox" name="sb_depth">
+             <property name="minimum">
+              <number>33</number>
              </property>
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>20</height>
-              </size>
+             <property name="maximum">
+              <number>2000</number>
              </property>
             </widget>
            </item>
@@ -471,6 +465,12 @@
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
             <widget class="QSlider" name="slider_video">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>22</height>
+              </size>
+             </property>
              <property name="minimum">
               <number>33</number>
              </property>
@@ -492,24 +492,12 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="le_video">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-               <horstretch>50</horstretch>
-               <verstretch>20</verstretch>
-              </sizepolicy>
+            <widget class="QSpinBox" name="sb_video">
+             <property name="minimum">
+              <number>33</number>
              </property>
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>20</height>
-              </size>
+             <property name="maximum">
+              <number>2000</number>
              </property>
             </widget>
            </item>
@@ -561,6 +549,12 @@
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <widget class="QSlider" name="slider_D_refresh">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>22</height>
+              </size>
+             </property>
              <property name="minimum">
               <number>33</number>
              </property>
@@ -579,24 +573,12 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="le_D_refresh">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>50</horstretch>
-               <verstretch>20</verstretch>
-              </sizepolicy>
+            <widget class="QSpinBox" name="sb_D_refresh">
+             <property name="minimum">
+              <number>33</number>
              </property>
-             <property name="minimumSize">
-              <size>
-               <width>50</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>50</width>
-               <height>20</height>
-              </size>
+             <property name="maximum">
+              <number>2000</number>
              </property>
             </widget>
            </item>
@@ -613,6 +595,12 @@
           <layout class="QHBoxLayout" name="horizontalLayout_4">
            <item>
             <widget class="QSlider" name="slider_D_module">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>22</height>
+              </size>
+             </property>
              <property name="minimum">
               <number>1</number>
              </property>
@@ -631,18 +619,12 @@
             </widget>
            </item>
            <item>
-            <widget class="QLineEdit" name="le_D_module">
-             <property name="minimumSize">
-              <size>
-               <width>30</width>
-               <height>20</height>
-              </size>
+            <widget class="QSpinBox" name="sb_D_module">
+             <property name="minimum">
+              <number>1</number>
              </property>
-             <property name="maximumSize">
-              <size>
-               <width>30</width>
-               <height>20</height>
-              </size>
+             <property name="maximum">
+              <number>10</number>
              </property>
             </widget>
            </item>

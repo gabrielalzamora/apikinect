@@ -63,10 +63,10 @@ private slots:
     void on_pbStop_clicked();
     void on_combo_highlighted(int index);
     //data link in tab_2
-    void sliderVideoUp(QString s);
-    void sliderDepthUp(QString s);
-    void slider3DUp(QString s);
-    void sliderModuleUp(QString s);
+    void sliderVideoUp(int i);
+    void sliderDepthUp(int i);
+    void slider3DUp(int i);
+    void sliderModuleUp(int i);
 
 private:
     Ui::MainWindow *ui;
