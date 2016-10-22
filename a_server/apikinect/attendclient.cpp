@@ -327,7 +327,7 @@ void AttendClient::depthRefresh()
 void AttendClient::depthSend()
 {
     //qDebug("AttendClient::sendDepth");
-    QImage image = QImage(640,480,QImage::Format_Grayscale8);
+    QImage image = QImage(640,480,QImage::Format_Indexed8);//if QT 5.5 or above use QImage::Format_Grayscale8
     unsigned char r,g,b, distaChar;
     for(int x = 0; x < 640; x++){
         for(int y = 0; y < 480; y++){

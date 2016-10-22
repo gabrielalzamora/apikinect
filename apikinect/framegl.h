@@ -13,7 +13,7 @@
 #include <QOpenGLWidget>
 #include <GL/glu.h>
 #include <mutex>
-#include "data.h"
+#include "configdata.h"
 
 
 class FrameGL : public QOpenGLWidget
@@ -35,7 +35,7 @@ signals:
     void zRotChange(int angle);
 
 public slots:
-    void setCloud(std::vector<point3c> c);
+    void setCloud(std::vector<point3rgb> c);
     void setCloud(std::vector<point2> d);
     void initializeGL() Q_DECL_OVERRIDE;
     void paintGL() Q_DECL_OVERRIDE;
@@ -51,7 +51,7 @@ public slots:
 
 private:
 //    std::mutex mtxCloud;//think better if it's neccesary
-    std::vector<point3c> pcloud_3d;//!< keep points cloud info
+    std::vector<point3rgb> pcloud_3d;//!< keep points cloud info
     std::vector<point2> pcloud_2d;
     int sizeCloud;//!< number of points should = pCloud.size()
 

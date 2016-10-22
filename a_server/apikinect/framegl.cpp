@@ -84,7 +84,7 @@ void FrameGL::setClearColor(const QColor &color)
  * Overloaded function that allow to save 3d and 2d point cloud
  * \param [in] c 3d+color point cloud to save
  */
-void FrameGL::setCloud(std::vector<point3c> c)
+void FrameGL::setCloud(std::vector<point3rgb> c)
 {
     //std::lock_guard<std::mutex> lock(mtxCloud);//actually not necesary, its the only fuction writting on pCloud
     pcloud_3d=c;

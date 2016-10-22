@@ -39,7 +39,7 @@ Apikinect::Apikinect(freenect_context *_ctx, int _index)
  */
 void Apikinect::VideoCallback(void *_rgb, uint32_t timestamp)
 {
-    std::lock_guard<std::mutex> lock(m_rgb_mutex);//lock will be destroy when exit VideoCallback
+    std::lock_guard<std::mutex> lock(m_rgb_mutex);//lock will be destroyed when exit VideoCallback
     uint8_t* rgb = static_cast<uint8_t*>(_rgb);
     copy(rgb, rgb+getVideoBufferSize(), m_buffer_video.begin());
     m_new_rgb_frame = true;
@@ -53,7 +53,7 @@ void Apikinect::VideoCallback(void *_rgb, uint32_t timestamp)
  */
 void Apikinect::DepthCallback(void *_depth, uint32_t timestamp)
 {
-    std::lock_guard<std::mutex> lock(m_depth_mutex);//lock will be destroy when exit VideoCallback
+    std::lock_guard<std::mutex> lock(m_depth_mutex);//lock will be destroyed when exit DepthCallback
     uint16_t* depth = static_cast<uint16_t*>(_depth);
     copy(depth, depth+getDepthBufferSize()/2, m_buffer_depth.begin());
     m_new_depth_frame = true;
@@ -98,10 +98,10 @@ bool Apikinect::getDepth(std::vector<uint16_t> &buffer)
  * \param [out] buffer3 buffer to receive point cloud.
  * \param [out] bufferB buffer to receive Barrido (swept).
  */
-void Apikinect::getAll(std::vector<point3c> &buffer3, std::vector<uint32_t> &bufferB)
+void Apikinect::getAll(std::vector<point3rgb> &buffer3, std::vector<uint32_t> &bufferB)
 {
-    point3c p3;
-    RGBQ color;
+    point3rgb p3;
+    rgb color;
     buffer3.resize(0);
     for(int i=0;i<360;i++) bufferB[i]=0;
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
@@ -115,7 +115,6 @@ void Apikinect::getAll(std::vector<point3c> &buffer3, std::vector<uint32_t> &buf
             color.rgbRed = m_buffer_video[3*i+0];    // R
             color.rgbGreen = m_buffer_video[3*i+1];  // G
             color.rgbBlue = m_buffer_video[3*i+2];   // B
-            color.rgbReserved = 0;
             p3.color = color;
             buffer3.push_back(p3);//MainWindow::p3Buf
 
@@ -138,8 +137,8 @@ void Apikinect::getAll(std::vector<point3c> &buffer3, std::vector<uint32_t> &buf
 void Apikinect::getAll(pBuf *structBuffers, srvKinect *aSrvKinect)
 {
     point2 p2;//2 dimensions points cloud
-    point3c p3;//3D + color points cloud
-    RGBQ color;
+    point3rgb p3;//3D + color points cloud
+    rgb color;
     structBuffers->ptrP3Buf->resize(0);//reset 3D points cloud
     structBuffers->ptrP2Buf->resize(0);//reset 2D points cloud
     for(int i=0;i<360;i++) (*structBuffers->ptrBarridoBuf)[i]=0;//reset Barrido vector
@@ -164,7 +163,6 @@ void Apikinect::getAll(pBuf *structBuffers, srvKinect *aSrvKinect)
                 color.rgbRed = m_buffer_video[3*i+0];    // R
                 color.rgbGreen = m_buffer_video[3*i+1];  // G
                 color.rgbBlue = m_buffer_video[3*i+2];   // B
-                color.rgbReserved = 0;
                 p3.color = color;
                 structBuffers->ptrP3Buf->push_back(p3);//stored in MainWindow::p3Buf
                 structBuffers->ptrP2Buf->push_back(p2);//stored in MainWindow::p2Buf
@@ -190,10 +188,10 @@ void Apikinect::getAll(pBuf *structBuffers, srvKinect *aSrvKinect)
  * downwards.
  * \param [out] buffer  where point cloud is stored.
  */
-void Apikinect::get3d(std::vector<point3c> &buffer)
+void Apikinect::get3d(std::vector<point3rgb> &buffer)
 {
-    point3c p3;
-    RGBQ color;
+    point3rgb p3;
+    rgb color;
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
 //time pre buffers
     for (int i = 0; i < 480*640; ++i)
@@ -205,7 +203,6 @@ void Apikinect::get3d(std::vector<point3c> &buffer)
             color.rgbRed = m_buffer_video[3*i+0];    // R
             color.rgbGreen = m_buffer_video[3*i+1];  // G
             color.rgbBlue = m_buffer_video[3*i+2];   // B
-            color.rgbReserved = 0;
             p3.color = color;
             buffer.push_back(p3);//MainWindow::p3Buf
         }
@@ -222,8 +219,8 @@ void Apikinect::get3d(std::vector<point3c> &buffer)
  */
 void Apikinect::get3d(pBuf *structBuffers, srvKinect *aSrvKinect)
 {
-    point3c p3;//3D + color points cloud
-    RGBQ color;
+    point3rgb p3;//3D + color points cloud
+    rgb color;
     structBuffers->ptrP3Buf->resize(0);//reset 3D points cloud
 
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
@@ -247,7 +244,7 @@ void Apikinect::get3d(pBuf *structBuffers, srvKinect *aSrvKinect)
                 color.rgbRed = m_buffer_video[3*i+0];    // R
                 color.rgbGreen = m_buffer_video[3*i+1];  // G
                 color.rgbBlue = m_buffer_video[3*i+2];   // B
-                color.rgbReserved = 0;
+
                 p3.color = color;
                 structBuffers->ptrP3Buf->push_back(p3);//stored in MainWindow::p3Buf
             }
@@ -286,7 +283,7 @@ void Apikinect::get2(std::vector<point2> &buffer)
 void Apikinect::get2(pBuf *structBuffers, srvKinect *aSrvKinect)
 {
     point2 p2;//2 dimensions points cloud
-    point3c p3;//3D + color points cloud
+    point3rgb p3;//3D + color points cloud
     structBuffers->ptrP2Buf->resize(0);//reset 2D points cloud
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
 
@@ -325,7 +322,7 @@ void Apikinect::get2(pBuf *structBuffers, srvKinect *aSrvKinect)
  */
 void Apikinect::getBarrido(std::vector<uint32_t> &buffer)
 {
-    point3c p3;
+    point3rgb p3;
     for(int i=0;i<360;i++) buffer[i]=0;
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
 
@@ -352,7 +349,7 @@ void Apikinect::getBarrido(std::vector<uint32_t> &buffer)
  */
 void Apikinect::getBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
 {
-    point3c p3;
+    point3rgb p3;
     for(int i=0;i<360;i++) (*structBuffers->ptrBarridoBuf)[i]=0;
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
 
@@ -394,8 +391,8 @@ void Apikinect::getBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
  */
 void Apikinect::get3dBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
 {
-    point3c p3;//3D + color points cloud
-    RGBQ color;
+    point3rgb p3;//3D + color points cloud
+    rgb color;
     structBuffers->ptrP3Buf->resize(0);//reset 3D points cloud
     for(int i=0;i<360;i++) (*structBuffers->ptrBarridoBuf)[i]=0;//reset Barrido vector
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
@@ -419,7 +416,7 @@ void Apikinect::get3dBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
                 color.rgbRed = m_buffer_video[3*i+0];    // R
                 color.rgbGreen = m_buffer_video[3*i+1];  // G
                 color.rgbBlue = m_buffer_video[3*i+2];   // B
-                color.rgbReserved = 0;
+
                 p3.color = color;
                 structBuffers->ptrP3Buf->push_back(p3);//stored in MainWindow::p3Buf
 
@@ -445,7 +442,7 @@ void Apikinect::get3dBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
 void Apikinect::get2dBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
 {
     point2 p2;//2 dimensions points cloud
-    point3c p3;//3D + color points cloud
+    point3rgb p3;//3D + color points cloud
     structBuffers->ptrP2Buf->resize(0);//reset 2D points cloud
     for(int i=0;i<360;i++) (*structBuffers->ptrBarridoBuf)[i]=0;//reset Barrido vector
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
@@ -492,8 +489,8 @@ void Apikinect::get2dBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
 void Apikinect::get2and3(pBuf *structBuffers, srvKinect *aSrvKinect)
 {
     point2 p2;//2 dimensions points cloud
-    point3c p3;//3D + color points cloud
-    RGBQ color;
+    point3rgb p3;//3D + color points cloud
+    rgb color;
     structBuffers->ptrP3Buf->resize(0);//reset 3D points cloud
     structBuffers->ptrP2Buf->resize(0);//reset 2D points cloud
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
@@ -519,10 +516,10 @@ void Apikinect::get2and3(pBuf *structBuffers, srvKinect *aSrvKinect)
                 color.rgbRed = m_buffer_video[3*i+0];    // R
                 color.rgbGreen = m_buffer_video[3*i+1];  // G
                 color.rgbBlue = m_buffer_video[3*i+2];   // B
-                color.rgbReserved = 0;
+
                 p3.color = color;
-                structBuffers->ptrP3Buf->push_back(p3);//stored in MainWindow::p3Buf
-                structBuffers->ptrP2Buf->push_back(p2);//stored in MainWindow::p2Buf
+                structBuffers->ptrP3Buf->push_back(p3);//stored in MainCore::p3Buf
+                structBuffers->ptrP2Buf->push_back(p2);//stored in MainCore::p2Buf
             }
         }
     }
@@ -530,10 +527,36 @@ void Apikinect::get2and3(pBuf *structBuffers, srvKinect *aSrvKinect)
 
 /*!
  * \brief store acceleration  components in a, accel strut
- * \param [out] a where acceleration components is saved
+ * \param [out] a where acceleration components is saved as accel struct
  */
 void Apikinect::getAccel(accel &a)
 {
     freenect_update_tilt_state(myself);
     freenect_get_mks_accel(freenect_get_tilt_state(myself), &a.accel_x, &a.accel_y, &a.accel_z);
+}
+
+/*!
+ * \brief store angle in a
+ * \param [out] a where angle is saved as int
+ */
+void Apikinect::getAngle(int &a)
+{
+    freenect_raw_tilt_state *state;
+    state = freenect_get_tilt_state(myself);
+    a = state->tilt_angle;
+}
+
+/*!
+ * \brief set kinect at int a angle
+ * \param [in] a angle to be set
+ *
+ * kinect set angle over horizon, a=-10 head down 10º if its horizontal
+ * but if it is looking down at -5º a=-10 will only tilt down 5º to
+ * reach -10º. Limited to +-27º tilt
+ */
+void Apikinect::setAngle(int a)
+{
+    if(a>27) a=27;
+    if(a<-27) a=-27;
+    this->setTiltDegrees(double(a));
 }

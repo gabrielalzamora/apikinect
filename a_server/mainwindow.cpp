@@ -35,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     putKcombo();//fill combo box with available kinects
     paintBarridoAxes();//paint axes on barrido view
     initconnects();
+    apiconnects();
 }
 /*!
  * \brief destructor
@@ -42,10 +43,6 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     qDebug("MainWindow::~MainWindow()");
-    if(apicore->getCurrentKIndex() !=-1){
-//        stoploop();
-//        stopK(currentKIndex);
-    }
     delete sceneVideo;
     delete sceneDepth;
     delete sceneBarre;
@@ -62,11 +59,14 @@ MainWindow::~MainWindow()
  */
 void MainWindow::paintVideo()
 {
+//    QTime t;
+//    t.start();
     if( imgVideo != NULL ) delete imgVideo;
     imgVideo = new QImage(apicore->videoBuf.data(),640,480,QImage::Format_RGB888);
     sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(ui->gvVideo->width()-2,ui->gvVideo->height()-2,Qt::KeepAspectRatio));
     //sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(320,240,Qt::KeepAspectRatio));
     ui->gvVideo->show();
+//    apicore->timeVector[e_video] = t.elapsed();
 }
 /*!
  * \brief draw depth image
@@ -76,6 +76,8 @@ void MainWindow::paintVideo()
  */
 void MainWindow::paintDepth()
 {
+//    QTime t;
+//    t.start();
     if( imgDepth != NULL ) delete imgDepth;
     imgDepth = new QImage(640,480,QImage::Format_RGB32);
     unsigned char r,g,b, distaChar;
@@ -90,6 +92,7 @@ void MainWindow::paintDepth()
     sceneDepth->addPixmap(QPixmap::fromImage(*imgDepth).scaled(ui->gvDepth->width()-2,ui->gvDepth->height()-2,Qt::KeepAspectRatio));
     //sceneDepth->addPixmap(QPixmap::fromImage(*imgDepth).scaled(320,240,Qt::KeepAspectRatio));
     ui->gvDepth->show();
+//    apicore->timeVector[e_depth] = t.elapsed();
 }
 /*!
  * \brief draw Barrido
@@ -99,6 +102,8 @@ void MainWindow::paintDepth()
  */
 void MainWindow::paintBarrido()
 {
+//    QTime t;
+//    t.start();
     int x,y;
     int aux(0);
     if( ellipseVector.size() != 0 ){
@@ -109,14 +114,16 @@ void MainWindow::paintBarrido()
         ellipseVector.resize(0);
     }
     for(int i=0;i<360;i++){
-//        if(barridoBuf[i] == 0) continue;//no data info no plot
-//        y = 235-(235*barridoBuf[i]/ui->tab_2->m_srvK.m_fZMax);//divide barridoBuf[i] by max mesured distance to fit in screen
+        if(apicore->barridoBuf[i] == 0) continue;//no data info no plot
+        y = 235-(235*apicore->barridoBuf[i]/getSrvKinect().m_fZMax);//scale barridoBuf[i] to fit in screen
+        //y = 235-(235*apicore->barridoBuf[i]/ui->le_limits_Zmax->text().toInt());
         x = 320*(360-i)/360;
         ellipseVector.push_back(new QGraphicsEllipseItem(x,y,1.0,1.0));
         sceneBarre->addItem(ellipseVector[aux]);
         aux++;
     }
     ui->gvBarrido->show();
+//    apicore->timeVector[e_barrido] = t.elapsed();
 }
 /*!
  * \brief draw axes on sceneBarre to show on gvBarrido.
@@ -137,14 +144,22 @@ void MainWindow::paintBarridoAxes()
  */
 void MainWindow::paint3D()
 {
-
+//    QTime t;
+//    t.start();
+    ui->glWidget->setCloud(apicore->p3rgbBuf);
+    ui->glWidget->repaint();
+//    apicore->timeVector[e_3] = t.elapsed();
 }
 /*!
  * \brief utility not implemented
  */
 void MainWindow::paint2D()
 {
-
+//    QTime t;
+//    t.start();
+    ui->glWidget->setCloud(apicore->p2Buf);
+    ui->glWidget->repaint();
+//    apicore->timeVector[e_2] = t.elapsed();
 }
 /*!
  * \brief aux function to show time spent in calculus or painting.
@@ -176,15 +191,15 @@ void MainWindow::printTimeVector()
     //pinta las aceleraciones----------------------accel
     aux = "\n  accel X = ";
     str.append(aux);
-    aux.setNum(a.accel_x);
+    aux.setNum(apicore->getAccel().accel_x);
     str.append(aux);
     aux = "\n  accel Y = ";
     str.append(aux);
-    aux.setNum(a.accel_y);
+    aux.setNum(apicore->getAccel().accel_y);
     str.append(aux);
     aux = "\n  accel Z = ";
     str.append(aux);
-    aux.setNum(a.accel_z);
+    aux.setNum(apicore->getAccel().accel_z);
     str.append(aux);
     ui->textEdit->setText(str);
 }
@@ -192,7 +207,7 @@ void MainWindow::printTimeVector()
  * \brief set ConfigData gui as newSrvK says
  * \param newSrvK
  */
-void MainWindow::updateSrvKinect(srvKinect newSrvK)
+void MainWindow::setSrvKinect(srvKinect newSrvK)
 {
     //qDebug("MainWindow::setSrvKinect");
     QString auxStr;
@@ -228,14 +243,6 @@ void MainWindow::updateSrvKinect(srvKinect newSrvK)
     else ui->cb_depth->setChecked(false);
     if(newSrvK.m_bCompressColor) ui->cb_video_comp->setChecked(true);
     else ui->cb_video_comp->setChecked(false);//---------------------------21/21
-}
-/*!
- * \brief its previous function: updateSrvKinect() as setter
- * \param newSrvK
- */
-void MainWindow::setSrvKinect(srvKinect newSrvK)
-{
-    updateSrvKinect(newSrvK);
 }
 /*!
  * \brief return srvKinect obtained from ConfigData gui
@@ -278,7 +285,9 @@ srvKinect MainWindow::getSrvKinect()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     qDebug("MainWindow::closeEvent()");
-    //this->~MainWindow();//no es aquí, mira QTcpServer o sockets, peta si cierras tras conectar
+    if(apicore->getDeviceStatus()){
+        apicore->~MainCore();
+    }
     //exit(0);
 }
 
@@ -348,59 +357,66 @@ void MainWindow::initconnects()
     connect(ui->sb_depth,SIGNAL(valueChanged(int)),this,SLOT(sliderDepthUp(int)));
     connect(ui->sb_D_refresh,SIGNAL(valueChanged(int)),this,SLOT(slider3DUp(int)));
     connect(ui->sb_D_module,SIGNAL(valueChanged(int)),this,SLOT(sliderModuleUp(int)));
-    //connect slider -> line edit text
+    //connect slider -> spin box value
     connect(ui->slider_video,SIGNAL(sliderMoved(int)),ui->sb_video,SLOT(setValue(int)));
     connect(ui->slider_depth,SIGNAL(sliderMoved(int)),ui->sb_depth,SLOT(setValue(int)));
     connect(ui->slider_D_refresh,SIGNAL(sliderMoved(int)),ui->sb_D_refresh,SLOT(setValue(int)));
     connect(ui->slider_D_module,SIGNAL(sliderMoved(int)),ui->sb_D_module,SLOT(setValue(int)));
+}
+/*!
+ * \brief connect api signals to gui functions
+ */
+void MainWindow::apiconnects()
+{
+    //API
     //connect maincore signals -> this slots
     connect(apicore,SIGNAL(printVideo()),this,SLOT(paintVideo()));
     connect(apicore,SIGNAL(printDepth()),this,SLOT(paintDepth()));
+    connect(apicore,SIGNAL(print3D()),this,SLOT(paint3D()));
+    connect(apicore,SIGNAL(print2D()),this,SLOT(paint2D()));
+    connect(apicore,SIGNAL(printBarrido()),this,SLOT(paintBarrido()));
+    connect(apicore,SIGNAL(updateSrvKinect(srvKinect)),this,SLOT(setSrvKinect(srvKinect)));
+    emit apicore->updateSrvKinect(apicore->getSrvKinect());
 }
 /*!
  * \brief start selected kinect data flow
  */
-void MainWindow::on_pbGo_clicked()///--------------------------DEBUG
+void MainWindow::on_pbGo_clicked()
 {
     ui->pbGo->setEnabled(false);
-    int index = ui->combo->currentText().toInt();
-    apicore->setCurrentKIndex(index);
-    apicore->startK(index);
-    apicore->go();
+    ui->pbStop->setEnabled(true);
 
-//    loop();
+    if( comboIndex != apicore->getCurrentKIndex() && apicore->getCurrentKIndex() != -1  ){
+        apicore->stopK(apicore->getCurrentKIndex());
+    }
+    apicore->startK(comboIndex);
+    apicore->setCurrentKIndex(comboIndex);
+    apicore->go();
 }
 /*!
  * \brief stop kinect data flow and delete handler
  */
 void MainWindow::on_pbStop_clicked()
 {
+    apicore->stop();
     ui->pbStop->setEnabled(false);
-//    stoploop();
-    int index = ui->combo->currentText().toInt();
-    if( index == apicore->getCurrentKIndex() ){
-//        stopK(index);
-    }
 }
 /*!
- * \brief when combo item selected -> buttons activated
+ * \brief when combo item activated -> buttons activated
  * \param [in] index
- * pointer to string with kinect index selected in combo box
  */
-void MainWindow::on_combo_highlighted(int index)
+void MainWindow::on_combo_activated(int index)
 {
-    if ( index < 0 || index >= apicore->getKnumber() ){
+    //qDebug("MainWindow::on_combo_activated()");
+    comboIndex = index;
+    if ( comboIndex < 0 || comboIndex >= apicore->getKnumber() ){
         ui->textEdit->setText(" ERROR kinect index out of bounds. Restart.");
         return;
-    }
-    if( apicore->getCurrentKIndex() == -1 ){
+    }else if( apicore->getCurrentKIndex() == -1 || apicore->getCurrentKIndex() != index ){
         ui->pbGo->setEnabled(true);
-        ui->pbStop->setEnabled(false);
-    }else if( apicore->getCurrentKIndex() == index ){///Recuerda apagar k activo antes de activar otro k
+    }else if( apicore->getCurrentKIndex() == index ){
         ui->pbGo->setEnabled(false);
         ui->pbStop->setEnabled(true);
-    }else{
-        ui->textEdit->setText(" First stop running active kinect, then start the other one selected.");
     }
 }
 /*!
@@ -475,3 +491,4 @@ void MainWindow::sliderModuleUp(int i)
     }
     ui->slider_D_module->setSliderPosition(i);
 }
+

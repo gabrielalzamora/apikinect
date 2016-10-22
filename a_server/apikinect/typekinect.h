@@ -14,8 +14,18 @@
 #include <cstdint>
 #include <vector>
 
+#define	RES_BARRIDO	0.50
+#define	TAM_BARRIDO	360
+
+#define RES_KINECT_3D_H 480
+#define RES_KINECT_3D_W 640
+
+#define RES_KINECT_VIDEO_H 480
+#define RES_KINECT_VIDEO_W 640
+
 #define W 640
 #define H 480
+
 #define SRVKPORT 10003
 #define DEPTHPORT 10004
 #define VIDEOPORT 10005
@@ -102,7 +112,7 @@ typedef struct {
  * client to server, change kinect camera angle remotely
  * and update data to be sent, limits, refresh...
  */
-typedef struct {
+typedef struct SrvKinect{
     double m_fAngulo;//!< angle (degrees) with horizontal plane of kinect base.
     int8_t m_iAnguloKinect;//!< sigue cuando te estanques en otra cosa
     double m_fAltura;

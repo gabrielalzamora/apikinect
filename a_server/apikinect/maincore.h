@@ -32,6 +32,7 @@ public:
     std::vector<uint8_t> videoBuf;//!< container of video info from kinect
     std::vector<uint16_t> depthBuf;//!< container of depth info from kinect
     std::vector<point3rgb> p3rgbBuf;//!< container of points cloud <- video+depth
+    //std::vector<point3c> p3cBuf;//!< container of points cloud with transparency component ¿¿¿para ADAPTAR VisorQT ???
     std::vector<point2> p2Buf;//!< container of 2D points = (point cloud) - color - y(coordinate)
     std::vector<uint32_t> barridoBuf;//!< barridoBuf contains distance on angle (360-i)/2 degrees, xOz plane
 
@@ -43,14 +44,17 @@ signals:
     void print2D();
     void printTimeVector();
 
+    void updateSrvKinect(srvKinect newSrvK);
+
 public slots:
     //freenect kinect
     void startK(int indexK=0);
     void stopK(int indexK=0);
     void updateKinect();//send current ledOption and angle to kinect
-    //srvKinect
-    void updateSrvKinect(srvKinect newSrvK);//set new configuration data
     //setters & getters
+    int getDeviceStatus();
+    void setSrvKinect(srvKinect newSrvK);//set new configuration data
+    srvKinect getSrvKinect();
     void setCurrentKIndex(int index);
     int getCurrentKIndex();
     int getKnumber();
@@ -58,6 +62,7 @@ public slots:
     accel getAccel();
     //start timers
     void go();//!< start sending data to mainwindow acord to configdata info
+    void stop();//!< stop sending data to mainwindow
 
 private slots:
     void init();
@@ -65,7 +70,6 @@ private slots:
     void startServer();
     void attendNewClient();
     //
-
     void nextVideoFrame();//!< convenience function to use qtimers
     void nextDepthFrame();//!< convenience function to use qtimers
     void next3DFrame();//!< convenience function to use qtimers

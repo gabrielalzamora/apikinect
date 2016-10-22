@@ -14,7 +14,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTime>
-#include "data.h"
+#include "configdata.h"
 
 class AttendClient : public QObject
 {

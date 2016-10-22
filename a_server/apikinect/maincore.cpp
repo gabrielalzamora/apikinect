@@ -51,9 +51,9 @@ MainCore::MainCore(QObject *parent) : QObject(parent)
 MainCore::~MainCore()
 {
     qDebug("MainCore::~MainCore()");
-    if(currentKIndex !=-1){
-
-        stopK(currentKIndex);
+    if(currentKIndex != -1){
+        stop();//stop cicle
+        stopK(currentKIndex);//stop kinect
     }
 }
 
@@ -96,14 +96,30 @@ void MainCore::updateKinect()
     }
 }
 /*!
+ * \brief tells you if device pointer is not null (m_kinect.start() launched)
+ * \return int = 0 if device not started i.e. *device == NULL
+ */
+int MainCore::getDeviceStatus()
+{
+    if( this->device == NULL ){
+        return 0;
+    }
+    return 1;
+}
+/*!
  * \brief set srvKinect data sended by client
  * \param [in] sk
  * client current srvKinect
  */
-void MainCore::updateSrvKinect(srvKinect newSrvK)
+void MainCore::setSrvKinect(srvKinect newSrvK)
 {
 //    qDebug("MainCore::updateKinect");
     config->setSrvK(newSrvK);
+}
+
+srvKinect MainCore::getSrvKinect()
+{
+    return config->srvK;
 }
 
 /*!
@@ -153,12 +169,28 @@ accel MainCore::getAccel()
  */
 void MainCore::go()
 {
-    nextVideoFrame();
-    timerVideo->start(config->srvK.m_ulRefrescoColor);
-    nextDepthFrame();
-    timerDepth->start(config->srvK.m_ulRefrescoDepth);
-    next3DFrame();
-    timer3D->start(config->srvK.m_ulRefresco3D);
+    if ( config->srvK.m_bEnvioColor ){
+        nextVideoFrame();
+        timerVideo->start(config->srvK.m_ulRefrescoColor);
+    }
+    if ( config->srvK.m_bEnvioDepth ){
+        nextDepthFrame();
+        timerDepth->start(config->srvK.m_ulRefrescoDepth);
+    }
+    if ( config->srvK.m_bEnvio3D || config->srvK.m_bEnvio2D || config->srvK.m_bEnvioBarrido ){
+        next3DFrame();
+        timer3D->start(config->srvK.m_ulRefresco3D);
+    }
+}
+/*!
+ * \brief MainCore::stop
+ */
+void MainCore::stop()
+{
+    if (timerVideo->isActive()) timerVideo->stop();
+    if (timerDepth->isActive()) timerDepth->stop();
+    if (timer3D->isActive()) timer3D->stop();
+    if (currentKIndex != -1) stopK(currentKIndex);
 }
 
 /*!
@@ -173,6 +205,7 @@ void MainCore::init()
     flag = false;
     //config data
     config = new ConfigData(this);
+
     //buffers
     videoBuf.resize(640*480*3);
     depthBuf.resize(640*480);
@@ -225,7 +258,7 @@ void MainCore::attendNewClient()///------test with concurrent clients----------D
     if( attendant == NULL ) qDebug("BAD_ALLOC  AttendClient");
     //attendVector.push_back(attendant);
 
-    connect(attendant,SIGNAL(newSrvKinect(srvKinect)),this,SLOT(updateSrvKinect(srvKinect)));
+    connect(attendant,SIGNAL(newSrvKinect(srvKinect)),this,SLOT(setSrvKinect(srvKinect)));
 }
 
 /*!

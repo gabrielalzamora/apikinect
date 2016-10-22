@@ -7,97 +7,96 @@
  * https://www.gnu.org/licenses/gpl.html
  */
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MainCore_H
+#define MainCore_H
 
-#include <QTime>
-#include <mutex>
-#include <QGraphicsScene>
-#include <QGraphicsItem>
-#include <QTcpServer>
-#include <QMainWindow>
+class QTcpServer;
+class QTimer;
+class Apikinect;
+class AttendClient;
+class FrameGL;
+class ConfigData;
 #include "apikinect.h"
-#include "attendclient.h"
-#include "framegl.h"
-#include "data.h"
 
 namespace Ui {
-class MainWindow;
+class MainCore;
 }
 
-class MainWindow : public QMainWindow
+class MainCore : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    explicit MainCore(QObject *parent = 0);
+    ~MainCore();
+    std::vector<uint8_t> videoBuf;//!< container of video info from kinect
+    std::vector<uint16_t> depthBuf;//!< container of depth info from kinect
+    std::vector<point3rgb> p3rgbBuf;//!< container of points cloud <- video+depth
+    //std::vector<point3c> p3cBuf;//!< container of points cloud with transparency component ¿¿¿para ADAPTAR VisorQT ???
+    std::vector<point2> p2Buf;//!< container of 2D points = (point cloud) - color - y(coordinate)
+    std::vector<uint32_t> barridoBuf;//!< barridoBuf contains distance on angle (360-i)/2 degrees, xOz plane
 
 signals:
+    void printVideo();//warn videoBuf ready to be printed
+    void printDepth();
+    void printBarrido();
+    void print3D();
+    void print2D();
+    void printTimeVector();
+
+    void updateSrvKinect(srvKinect newSrvK);
 
 public slots:
-    void videoDataReady();//print videoBuf
-    void depthDataReady();//print depthBuf
-    void barridoDataReady();//print BarridoBuf
-    void barridoInit();//paint axes
-    void updateKinect();//send ledOption and angle to kinect
-    void updateSrvKinect(srvKinect newSrvK);//set new configuration data
+    //freenect kinect
+    void startK(int indexK=0);
+    void stopK(int indexK=0);
+    void updateKinect();//send current ledOption and angle to kinect
+    //setters & getters
+    int getDeviceStatus();
+    void setSrvKinect(srvKinect newSrvK);//set new configuration data
+    srvKinect getSrvKinect();
+    void setCurrentKIndex(int index);
+    int getCurrentKIndex();
+    int getKnumber();
+    int getTime(eOption opt);//in milliseconds : e_video, e_depth, e_3, e_2, e_barrido, e_accel
+    accel getAccel();
+    //start timers
+    void go();//!< start sending data to mainwindow acord to configdata info
+    void stop();//!< stop sending data to mainwindow
 
 private slots:
     void init();
-    void setServerIp();
-    void putKcombo();
-
-    //freenect kinect
-    void startK(int indexK);
-    void stopK(int indexK);
-    void loop();
-    void stoploop();
-    void printTimeVector(std::vector<int> &timeV);
-
-    //gui
-    void on_pbGo_clicked();
-    void on_pbStop_clicked();
-    void on_combo_activated(const QString &arg1);
-
     //server
     void startServer();
     void attendNewClient();
+    //
+    void nextVideoFrame();//!< convenience function to use qtimers
+    void nextDepthFrame();//!< convenience function to use qtimers
+    void next3DFrame();//!< convenience function to use qtimers
 
 protected:
-    void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
+
 
 private:
-    Ui::MainWindow *ui;
-    QGraphicsScene *sceneVideo;
-    QGraphicsScene *sceneDepth;
-    QGraphicsScene *sceneBarre;
-    QImage *imgVideo;
-    QImage *imgDepth;
-    QImage *imgBarre;
-    QGraphicsEllipseItem *ellipse;//!< holds single Barrido point to add to sceneBarre
-    std::vector<QGraphicsEllipseItem*> ellipseVector;//!< holds Barrido points to paint in ellipse
-    QPainter *ptpt;
+    int numKinects;//!< number of detected kinects
+    int currentKIndex;//!< index of active kinect
+    QTimer *timerVideo;
+    QTimer *timerDepth;
+    QTimer *timer3D;
 
-    Freenect::Freenect freenect;//!< Freenect class object to start events thread and Devices
+    Freenect::Freenect freenect;//!< Freenect class object to start events thread and Apikinect
     freenect_context *context;//!< point to usb context associated to kinect data handling
     Apikinect *device;//!< class object that handle kinect sending led, angle orders, receiving frames, acceleration data
-
-    std::vector<uint8_t> videoBuf;//!< container of video info from kinect
-    std::vector<uint16_t> depthBuf;//!< container of depth info from kinect
-    std::vector<point3c> p3Buf;//!< container of points cloud <- video+depth
-    std::vector<point2> p2Buf;//!< container of 2D points = (point cloud) - color - y(coordinate)
-    std::vector<uint32_t> barridoBuf;//!< barridoBuf contains distance on angle (360-i)/2 degrees, xOz plane
-    accel a;//!< acceleration components x,y,z (y ~ 9,81 if m_iAnguloKinect=0)
-    pBuf structBuffers;//!< to tell mainServer where to find data buffers
-    int flag;//!< 0 stop loop(), otherwise let loop() run
-    int numDevices;//!< number of detected kinects
-    int currentDeviceIndex;//!< index of active kinect
-
-    QTcpServer *mainServer;
+    ConfigData *config;
+    QTcpServer *server;
     AttendClient *attendant;
-    std::vector<AttendClient*> attendClients;//!< contain active AttendClient (allow to access them)
+    std::vector<AttendClient*> attendVector;//!< contain active AttendClient (allow to access them)
 
+    accel a;//!< acceleration components x,y,z (y ~ 9,81 if m_iAnguloKinect=0)
     std::vector<int> timeVector;//msecs
+    pBuf structBuffers;//!< to tell server where to find data buffers
+
+    int flag;//!< 0 stop loop(), otherwise let loop() run
+
 };
-#endif // MAINWINDOW_H
+#endif // MainCore_H

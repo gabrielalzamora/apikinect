@@ -21,7 +21,6 @@ SOURCES += main.cpp\
     apikinect/maincore.cpp
 
 HEADERS  += mainwindow.h \
-    typekinect.h \
     apikinect/include/GL/gl.h \
     apikinect/include/GL/glu.h \
     apikinect/include/GL/glu_mangle.h \
