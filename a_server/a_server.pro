@@ -4,45 +4,36 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network opengl
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui network opengl widgets
 
 TARGET = a_server
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
-           mainwindow.cpp \
+#           mainwindow.cpp \
+    apikinect/mainserver.cpp \
     apikinect/apikinect.cpp \
-    apikinect/attendclient.cpp \
     apikinect/configdata.cpp \
-    apikinect/framegl.cpp \
-    apikinect/maincore.cpp
+#    apikinect/framegl.cpp
+    apikinect/attendclient.cpp
 
-HEADERS  += mainwindow.h \
-    apikinect/include/GL/gl.h \
-    apikinect/include/GL/glu.h \
-    apikinect/include/GL/glu_mangle.h \
-    apikinect/include/libfreenect.h \
-    apikinect/include/libfreenect.hpp \
-    apikinect/include/libusb.h \
+HEADERS  += \# mainwindow.h \
+    apikinect/mainserver.h \
     apikinect/apikinect.h \
-    apikinect/attendclient.h \
     apikinect/configdata.h \
-    apikinect/framegl.h \
-    apikinect/maincore.h \
-    apikinect/typekinect.h
+#    apikinect/framegl.h \
+    apikinect/typekinect.h \
+    apikinect/attendclient.h
 
 FORMS    += mainwindow.ui
 
-# -L path to libraries -l libraries needed to compile 
-# delete initial lib_ from filename, i.e. libfreenect.so ->> -lfreenect
+unix:!macx: LIBS += -L$$PWD/apikinect/lib/ -lusb-1.0 -lfreenect -lGLU
 
-LIBS    += -L ./apikinect/lib -lfreenect -lusb-1.0 -lGLU -lGLEW
+INCLUDEPATH += $$PWD/apikinect/include
+DEPENDPATH += $$PWD/apikinect/include
 
-# INCLUDEPATH += tell QT where do you hide your include's
-INCLUDEPATH += ./apikinect/include
+unix:!macx: PRE_TARGETDEPS += $$PWD/apikinect/lib/libusb-1.0.a
+unix:!macx: PRE_TARGETDEPS += $$PWD/apikinect/lib/libfreenect.a
+unix:!macx: PRE_TARGETDEPS += $$PWD/apikinect/lib/libGLU.a
 
-# due to problems compiling std::vector std::mutex and so on
 QMAKE_CXXFLAGS  += -std=gnu++11

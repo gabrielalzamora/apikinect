@@ -9,17 +9,16 @@
  */
 
 
-#include "maincore.h"
-//#include <QNetworkInterface>
+#include "mainserver.h"
+#include <QNetworkInterface>
 #include <QTcpServer>
 #include <QTimer>
 #include "apikinect.h"
 #include "attendclient.h"
-#include "framegl.h"
 #include "configdata.h"
 
 /*!
- * \class MainCore
+ * \class MainServer
  * \brief holds all server functionality.
  *
  * Through members that are type Apikinect, AttendClient,
@@ -39,20 +38,22 @@
  * \brief constructor
  * \param parent
  */
-MainCore::MainCore(QObject *parent) : QObject(parent)
+MainServer::MainServer(bool sirvo, QObject *parent) : QObject(parent)
 {
-    //qDebug("MainCore::MainCore");
+    //qDebug("MainServer::MainServer");
     init();
-    //startServer();
+    if(sirvo) startServer();
 }
 /*!
  * \brief destructor
  */
-MainCore::~MainCore()
+MainServer::~MainServer()
 {
-    qDebug("MainCore::~MainCore()");
-    if(currentKIndex !=-1){
-
+    qDebug("MainServer::~MainServer()");
+    if(attendant != NULL ){
+        attendant->~AttendClient();
+    }
+    if(getDeviceStatus()){
         stopK(currentKIndex);
     }
 }
@@ -63,18 +64,33 @@ MainCore::~MainCore()
  * init 'Apikinect device' to handle kinect of indexK.
  * \param [in] indexK.
  */
-void MainCore::startK(int indexK)
+void MainServer::startK(int indexK)
 {
+    //qDebug("MainServer::startK");
     device = &freenect.createDevice<Apikinect>(indexK);
     device->startVideo();
     device->startDepth();
+    int i(depthVoid());
+    while(depthVoid()){
+        device->stopDepth();
+        device->startDepth();
+        device->stopVideo();
+        device->startVideo();
+        qDebug("MainServer::startK  reiniciamos device");
+        i++;
+        if(i>5){
+            qDebug("MainServer::startK  problemas con sensor: comprueba conexiones y reinicia.");
+            stopK(indexK);
+            return;
+        }
+    }
     currentKIndex = indexK;
 }
 /*!
  * \brief destroy kinect handler.
  * \param [in] index kinect handler index to be destroyed.
  */
-void MainCore::stopK(int indexK)
+void MainServer::stopK(int indexK)
 {
     device->stopDepth();
     device->stopVideo();
@@ -88,7 +104,7 @@ void MainCore::stopK(int indexK)
  * When any data on 'ConfigData' object change it sends the order to
  * update to active kinect
  */
-void MainCore::updateKinect()
+void MainServer::updateKinect()
 {
     if( device != NULL ){
         device->setLed(freenect_led_options(config->getLedOption()));
@@ -96,10 +112,29 @@ void MainCore::updateKinect()
     }
 }
 /*!
+ * \brief return computer ip as QString
+ * \return QString with computer ip
+ */
+QString MainServer::getServerIp()
+{
+    QString ip;
+    QList<QHostAddress> ipList = QNetworkInterface::allAddresses();
+    // use first non-localhost IPv4 address
+    for (int i = 0; i < ipList.size(); ++i) {
+        if( (ipList.at(i) != QHostAddress::LocalHost) && ipList.at(i).toIPv4Address() ) {
+            ip = ipList.at(i).toString();
+            break;
+        }
+    }
+    // if none, then use localhost
+    if (ip.isEmpty()) ip = QHostAddress(QHostAddress::LocalHost).toString();
+    return ip;
+}
+/*!
  * \brief tells you if device pointer is not null (m_kinect.start() launched)
  * \return int = 0 if device not started i.e. *device == NULL
  */
-int MainCore::getDeviceStatus()
+int MainServer::getDeviceStatus()
 {
     if( this->device == NULL ){
         return 0;
@@ -108,16 +143,76 @@ int MainCore::getDeviceStatus()
 }
 /*!
  * \brief set srvKinect data sended by client
- * \param [in] sk
- * client current srvKinect
+ * \param [in] newSrvK
+ *
+ * set client current srvKinect to MainServer::ConfigData::srvK
  */
-void MainCore::setSrvKinect(srvKinect newSrvK)
+void MainServer::setSrvKinect(srvKinect newSrvK)
 {
-//    qDebug("MainCore::updateKinect");
+    //qDebug("MainServer::setSrvKinect");
+    //adaptamos QTimers si varia Refresco
+    if ( !newSrvK.m_bEnvioColor && timerVideo->isActive() ){
+        timerVideo->stop();
+    }else if( config->srvK.m_ulRefrescoColor != newSrvK.m_ulRefrescoColor ){
+        timerVideo->start(newSrvK.m_ulRefrescoColor);
+    }
+    if ( !newSrvK.m_bEnvioDepth && timerDepth->isActive() ){
+        timerDepth->stop();
+    }else if( config->srvK.m_ulRefrescoDepth != newSrvK.m_ulRefrescoDepth ){
+        timerDepth->start(newSrvK.m_ulRefrescoDepth);
+    }
+    if ( !(config->srvK.m_bEnvio3D || config->srvK.m_bEnvio2D || config->srvK.m_bEnvioBarrido) && timer3D->isActive() ){
+        timer3D->stop();
+    }else if( config->srvK.m_ulRefresco3D != newSrvK.m_ulRefresco3D ){
+        timer3D->start(newSrvK.m_ulRefresco3D);
+    }
+    //actualizamos ángulo en kinect
+    if( config->srvK.m_iAnguloKinect != newSrvK.m_iAnguloKinect ){
+        config->setSrvK(newSrvK);
+        emit updateSrvKinect(config->srvK);
+        updateKinect();
+        return;
+    }
     config->setSrvK(newSrvK);
+    emit updateSrvKinect(config->srvK);
+}
+/*!
+ * \brief set srvKinect data sended by GUI
+ * \param [in] newSrvK
+ *
+ * set client current srvKinect to MainServer::ConfigData::srvK
+ */
+void MainServer::setGUISrvKinect(srvKinect newSrvK)
+{
+    //qDebug("MainServer::setGUISrvKinect");
+    //adaptamos QTimers si varia Refresco
+    if ( !newSrvK.m_bEnvioColor && timerVideo->isActive() ){
+        timerVideo->stop();
+    }else if( config->srvK.m_ulRefrescoColor != newSrvK.m_ulRefrescoColor ){
+        timerVideo->start(newSrvK.m_ulRefrescoColor);
+    }
+    if ( !newSrvK.m_bEnvioDepth && timerDepth->isActive() ){
+        timerDepth->stop();
+    }else if( config->srvK.m_ulRefrescoDepth != newSrvK.m_ulRefrescoDepth ){
+        timerDepth->start(newSrvK.m_ulRefrescoDepth);
+    }
+    if ( !(config->srvK.m_bEnvio3D || config->srvK.m_bEnvio2D || config->srvK.m_bEnvioBarrido) && timer3D->isActive() ){
+        timer3D->stop();
+    }else if( config->srvK.m_ulRefresco3D != newSrvK.m_ulRefresco3D ){
+        timer3D->start(newSrvK.m_ulRefresco3D);
+    }
+    //actualizamos ángulo en kinect
+    if( config->srvK.m_iAnguloKinect != newSrvK.m_iAnguloKinect ){
+        config->setSrvK(newSrvK);
+        emit updateSrvKinect(config->srvK);
+        updateKinect();
+        return;
+    }
+    config->setSrvK(newSrvK);
+    emit updateClientSrvKinect(newSrvK);
 }
 
-srvKinect MainCore::getSrvKinect()
+srvKinect MainServer::getSrvKinect()
 {
     return config->srvK;
 }
@@ -126,7 +221,7 @@ srvKinect MainCore::getSrvKinect()
  * \brief getter for currentKIndex
  * \return currentKIndex
  */
-int MainCore::getCurrentKIndex()
+int MainServer::getCurrentKIndex()
 {
     return currentKIndex;
 }
@@ -134,7 +229,7 @@ int MainCore::getCurrentKIndex()
  * \brief setter of currentKIndex
  * \param index
  */
-void MainCore::setCurrentKIndex(int index)
+void MainServer::setCurrentKIndex(int index)
 {
     currentKIndex = index;
 }
@@ -142,7 +237,7 @@ void MainCore::setCurrentKIndex(int index)
  * \brief get number of kinect detected
  * \return number of kinect
  */
-int MainCore::getKnumber()
+int MainServer::getKnumber()
 {
     return freenect.deviceCount();
 }
@@ -151,7 +246,7 @@ int MainCore::getKnumber()
  * \param opt wich time will return
  * \return requested time in ms
  */
-int MainCore::getTime(eOption opt)
+int MainServer::getTime(eOption opt)
 {
     return timeVector[opt];
 }
@@ -159,15 +254,15 @@ int MainCore::getTime(eOption opt)
  * \brief getter for acceleration
  * \return
  */
-accel MainCore::getAccel()
+accel MainServer::getAccel()
 {
     return a;
 }
 
 /*!
- * \brief MainCore::go
+ * \brief MainServer::go
  */
-void MainCore::go()
+void MainServer::go()
 {
     if ( config->srvK.m_bEnvioColor ){
         nextVideoFrame();
@@ -183,9 +278,9 @@ void MainCore::go()
     }
 }
 /*!
- * \brief MainCore::stop
+ * \brief MainServer::stop
  */
-void MainCore::stop()
+void MainServer::stop()
 {
     if (timerVideo->isActive()) timerVideo->stop();
     if (timerDepth->isActive()) timerDepth->stop();
@@ -196,7 +291,7 @@ void MainCore::stop()
 /*!
  * \brief convenience function to initiate members
  */
-void MainCore::init()
+void MainServer::init()
 {
     //apikinect
     device = NULL;
@@ -207,13 +302,13 @@ void MainCore::init()
     config = new ConfigData(this);
 
     //buffers
-    videoBuf.resize(640*480*3);
-    depthBuf.resize(640*480);
-    p3rgbBuf.reserve(300000);//max number of points
+    videoBuf.resize(RES_KINECT_VIDEO_W*RES_KINECT_VIDEO_H*3);
+    depthBuf.resize(RES_KINECT_VIDEO_W*RES_KINECT_VIDEO_H);
+    p3rgbBuf.reserve(RES_KINECT_VIDEO_W*RES_KINECT_VIDEO_H);//max number of points
     p3rgbBuf.resize(0);//initially we have none
-    p2Buf.reserve(300000);
+    p2Buf.reserve(RES_KINECT_VIDEO_W*RES_KINECT_VIDEO_H);
     p2Buf.resize(0);
-    barridoBuf.resize(360);
+    barridoBuf.resize(TAM_BARRIDO);
     a.accel_x = a.accel_y = a.accel_z = 0;
     timeVector.resize(e_xtra);
     //pBuff
@@ -233,14 +328,33 @@ void MainCore::init()
     connect(timerDepth,SIGNAL(timeout()),this,SLOT(nextDepthFrame()));
     connect(timerVideo,SIGNAL(timeout()),this,SLOT(nextVideoFrame()));
 }
-
+/*!
+ * \brief function to asure that depth data are available
+ * \return 1 if no depth data, otherwise return 0
+ */
+int MainServer::depthVoid()
+{
+    //qDebug("MainServer::depthVoid");
+    if(getDeviceStatus()){
+        device->getDepth(depthBuf);
+        for(int i = 0; i < RES_KINECT_VIDEO_W*RES_KINECT_VIDEO_H;i++){
+            if( depthBuf[i] > 0 ){
+                return 0;
+            }
+        }
+    }else{
+        qDebug("MainServer::depthVoid  Intentas usar un device == NULL");
+        return 0;
+    }
+    return 1;
+}
 
 /*!
  * \brief start QTcpServer listening at port 9999 and connect to attendNewClient()
  */
-void MainCore::startServer()
+void MainServer::startServer()
 {
-    qDebug("MainCore::startServer");
+    qDebug("MainServer::startServer");
     if( !server->listen(QHostAddress::Any,SRVKPORT) ){
         qDebug("  server do not listen, closed\ntry to restart.");
         server->close();
@@ -251,28 +365,29 @@ void MainCore::startServer()
 /*!
  * \brief when client connection incoming create a new 'AttendClient' and bind
  */
-void MainCore::attendNewClient()///------test with concurrent clients----------DEBUG
+void MainServer::attendNewClient()
 {
-    qDebug("MainCore::attendNewClient");
+    //qDebug("MainServer::attendNewClient");
     attendant = new AttendClient(server->nextPendingConnection(),&structBuffers,this);
     if( attendant == NULL ) qDebug("BAD_ALLOC  AttendClient");
     //attendVector.push_back(attendant);
 
     connect(attendant,SIGNAL(newSrvKinect(srvKinect)),this,SLOT(setSrvKinect(srvKinect)));
+    connect(this,SIGNAL(updateClientSrvKinect(srvKinect)),attendant,SLOT(sendSrvKinect(srvKinect)));
 }
 
 /*!
- * \brief MainCore::nextVideoFrame
+ * \brief MainServer::nextVideoFrame
  */
-void MainCore::nextVideoFrame()
+void MainServer::nextVideoFrame()
 {
     device->getRGB(videoBuf);
     emit printVideo();
 }
 /*!
- * \brief MainCore::nextDepthFrame
+ * \brief MainServer::nextDepthFrame
  */
-void MainCore::nextDepthFrame()
+void MainServer::nextDepthFrame()
 {
     device->getDepth(depthBuf);
     emit printDepth();
@@ -283,7 +398,7 @@ void MainCore::nextDepthFrame()
  * Calculate from video + depth what is going to be sended
  * to client so you cannot show what you don't serve
  */
-void MainCore::next3DFrame()
+void MainServer::next3DFrame()
 {
     if( config->srvK.m_bEnvio3D && config->srvK.m_bEnvio2D && config->srvK.m_bEnvioBarrido ){
         ///------------------------------------------------------------------TIEMPOS, parte se calcula aquí

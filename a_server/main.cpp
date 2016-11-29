@@ -8,15 +8,31 @@
  * https://www.gnu.org/licenses/gpl.html
  */
 
-#include "mainwindow.h"
+//#include "mainwindow.h"
 #include <QApplication>
+#include <iostream>
+#include "apikinect/typekinect.h"
+#include "apikinect/mainserver.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
-    w.setWindowTitle("apikinect server");
-    w.show();
+//    MainWindow w;
+//    w.setWindowTitle("apikinect server");
+//    w.show();
 
-    return a.exec();
+//    return a.exec();
+
+    MainServer kinect;
+
+    if(kinect.getKnumber()){
+        std::cout << "KINECT DETECTADA........\n";
+        std::cout.flush();
+        kinect.startK();
+        kinect.go();
+        a.exec();
+    }else{
+        std::cerr << "NO DETECTO KINECT SALIMOS........\n";
+    }
+    return 0;
 }

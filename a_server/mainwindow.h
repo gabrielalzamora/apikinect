@@ -14,7 +14,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsItem>
 #include "apikinect/typekinect.h"
-#include "apikinect/maincore.h"
+#include "apikinect/mainserver.h"
 
 class QGraphicsScene;
 class QGraphicsItem;
@@ -82,7 +82,7 @@ private:
     QGraphicsEllipseItem *ellipse;//!< holds single Barrido point to add to sceneBarre
     std::vector<QGraphicsEllipseItem*> ellipseVector;//!< holds Barrido points to paint in ellipse
 
-    MainCore * apicore;//!< handle all kinect+server+client interactions
+    MainServer * server;//!< handle all kinect+server+client interactions
     int comboIndex;
 };
 #endif // MAINWINDOW_H

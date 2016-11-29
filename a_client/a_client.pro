@@ -4,27 +4,30 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network opengl
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui network opengl widgets
 
 TARGET = a_client
 TEMPLATE = app
 
-
 SOURCES += main.cpp\
            mainwindow.cpp\
-           data.cpp \
-           framegl.cpp
+    apikinect/mainclient.cpp \
+    apikinect/configdata.cpp \
+    apikinect/framegl.cpp \
 
 HEADERS  += mainwindow.h\
-            data.h \
-            typekinect.h \
-            framegl.h
+    apikinect/mainclient.h \
+    apikinect/configdata.h \
+    apikinect/typekinect.h \
+    apikinect/framegl.h
 
 FORMS    += mainwindow.ui
 
-LIBS     += -lGLU -lGLEW
+unix:!macx: LIBS += -L$$PWD/apikinect/lib/ -lGLU
 
-# due to problems compiling std::vector std::mutex and so on?????
+INCLUDEPATH += $$PWD/apikinect/include
+DEPENDPATH += $$PWD/apikinect/include
+
+unix:!macx: PRE_TARGETDEPS += $$PWD/apikinect/lib/libGLU.a
+
 QMAKE_CXXFLAGS  += -std=gnu++11

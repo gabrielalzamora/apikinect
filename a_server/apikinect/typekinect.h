@@ -163,6 +163,13 @@ typedef enum {
     e_barrido,
     e_accel,
     e_ir,
+    e_fly_video,
+    e_fly_depth,
+    e_fly_3,
+    e_fly_2,
+    e_fly_barrido,
+    e_fly_accel,
+    e_fly_ir,
     e_xtra
 } eOption;
 

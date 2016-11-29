@@ -23,9 +23,9 @@ public:
     int irOption;
 
 signals:
-    void srvKChanged(srvKinect newSrvK);
     void ledOptionChanged(int option);
     void irOptionChanged(int value);
+    void srvKinectChanged(srvKinect newSrvK);
     void configDataChanged();
 
 public slots:

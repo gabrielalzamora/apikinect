@@ -30,6 +30,7 @@ signals:
 private slots:
     void startServers();
     void readSrvKdata();
+    void sendSrvKinect(srvKinect newSrvK);
     //video
     void videoConnection();
     void videoIncoming();

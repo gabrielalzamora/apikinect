@@ -10,14 +10,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QTime>
-#include <QTimer>
 #include <QMainWindow>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
-#include <QTcpSocket>
-#include <QHostAddress>
-#include "data.h"
+#include "apikinect/configdata.h"
+#include "apikinect/mainclient.h"
 
 namespace Ui {
 class MainWindow;
