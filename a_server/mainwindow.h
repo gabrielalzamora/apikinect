@@ -73,6 +73,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    int comboIndex;
     QGraphicsScene *sceneVideo;
     QGraphicsScene *sceneDepth;
     QGraphicsScene *sceneBarre;
@@ -83,6 +84,5 @@ private:
     std::vector<QGraphicsEllipseItem*> ellipseVector;//!< holds Barrido points to paint in ellipse
 
     MainServer * server;//!< handle all kinect+server+client interactions
-    int comboIndex;
 };
 #endif // MAINWINDOW_H

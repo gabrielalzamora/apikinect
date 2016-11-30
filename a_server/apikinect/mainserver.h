@@ -89,17 +89,15 @@ private:
 
     Freenect::Freenect freenect;// Freenect class object to start events thread and Apikinect
     freenect_context *context;// point to usb context associated to kinect data handling
-    Apikinect *device;// class object that handle kinect sending led, angle orders, receiving frames, acceleration data
-    ConfigData *config;
+    Apikinect *device;// object that handle kinect sending led, angle orders, receiving frames, acceleration data
+    ConfigData *config;// store config data as led, Kinect angle, refresh rate, what to send...
     QTcpServer *server;
-    AttendClient *attendant;
+    AttendClient *attendant;// in charge of last connected client
     std::vector<AttendClient*> attendVector;// contain active AttendClient (allow to access them)
 
     accel a;// acceleration components x,y,z (y ~ 9,81 if m_iAnguloKinect=0)
     std::vector<int> timeVector;//msecs
-    pBuf structBuffers;// to tell server where to find data buffers
-
-    int flag;//!< 0 stop loop(), otherwise let loop() run
+    pBuf structBuffers;// to tell AttendClient *attendant where to find data buffers
 
 };
 #endif // MAINSERVER_H

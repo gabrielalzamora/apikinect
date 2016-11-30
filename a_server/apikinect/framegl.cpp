@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016  Gabriel Alzamora.
  * Copyright (c) 2016  Raúl Alves.
- * Copyright (c) 2010 individual OpenKinect contributors.
+ * Copyright (c) 2010  individual OpenKinect contributors.
  *
  * This code is licensed to you under the terms of the
  * GNU General Public License. See LICENSE file for the
@@ -141,7 +141,7 @@ void FrameGL::paintGL()
 
     drawAxis();
     drawCloud();
-    //drawLines();
+    //drawLines();//el de Raul Alves
 
     glPopMatrix();
 }

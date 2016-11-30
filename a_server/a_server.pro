@@ -2,6 +2,7 @@
 #
 # Project created by QtCreator 2016-07-08T10:36:55
 #
+# y no sabes cuantas veces he modificado...
 #-------------------------------------------------
 
 QT       += core gui network opengl widgets
@@ -10,18 +11,18 @@ TARGET = a_server
 TEMPLATE = app
 
 SOURCES += main.cpp\
-#           mainwindow.cpp \
+           mainwindow.cpp \
     apikinect/mainserver.cpp \
     apikinect/apikinect.cpp \
     apikinect/configdata.cpp \
-#    apikinect/framegl.cpp
+    apikinect/framegl.cpp \
     apikinect/attendclient.cpp
 
-HEADERS  += \# mainwindow.h \
+HEADERS  += mainwindow.h \
     apikinect/mainserver.h \
     apikinect/apikinect.h \
     apikinect/configdata.h \
-#    apikinect/framegl.h \
+    apikinect/framegl.h \
     apikinect/typekinect.h \
     apikinect/attendclient.h
 

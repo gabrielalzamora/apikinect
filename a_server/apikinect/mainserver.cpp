@@ -108,7 +108,7 @@ void MainServer::updateKinect()
 {
     if( device != NULL ){
         device->setLed(freenect_led_options(config->getLedOption()));
-        device->setTiltDegrees(double(config->srvK.m_iAnguloKinect));
+        device->setTiltDegrees(double(config->getSrvK().m_iAnguloKinect));
     }
 }
 /*!
@@ -153,28 +153,28 @@ void MainServer::setSrvKinect(srvKinect newSrvK)
     //adaptamos QTimers si varia Refresco
     if ( !newSrvK.m_bEnvioColor && timerVideo->isActive() ){
         timerVideo->stop();
-    }else if( config->srvK.m_ulRefrescoColor != newSrvK.m_ulRefrescoColor ){
+    }else if( config->getSrvK().m_ulRefrescoColor != newSrvK.m_ulRefrescoColor ){
         timerVideo->start(newSrvK.m_ulRefrescoColor);
     }
     if ( !newSrvK.m_bEnvioDepth && timerDepth->isActive() ){
         timerDepth->stop();
-    }else if( config->srvK.m_ulRefrescoDepth != newSrvK.m_ulRefrescoDepth ){
+    }else if( config->getSrvK().m_ulRefrescoDepth != newSrvK.m_ulRefrescoDepth ){
         timerDepth->start(newSrvK.m_ulRefrescoDepth);
     }
-    if ( !(config->srvK.m_bEnvio3D || config->srvK.m_bEnvio2D || config->srvK.m_bEnvioBarrido) && timer3D->isActive() ){
+    if ( !(config->getSrvK().m_bEnvio3D || config->getSrvK().m_bEnvio2D || config->getSrvK().m_bEnvioBarrido) && timer3D->isActive() ){
         timer3D->stop();
-    }else if( config->srvK.m_ulRefresco3D != newSrvK.m_ulRefresco3D ){
+    }else if( config->getSrvK().m_ulRefresco3D != newSrvK.m_ulRefresco3D ){
         timer3D->start(newSrvK.m_ulRefresco3D);
     }
     //actualizamos ángulo en kinect
-    if( config->srvK.m_iAnguloKinect != newSrvK.m_iAnguloKinect ){
+    if( config->getSrvK().m_iAnguloKinect != newSrvK.m_iAnguloKinect ){
         config->setSrvK(newSrvK);
-        emit updateSrvKinect(config->srvK);
+        emit updateSrvKinect(config->getSrvK());
         updateKinect();
         return;
     }
     config->setSrvK(newSrvK);
-    emit updateSrvKinect(config->srvK);
+    emit updateSrvKinect(config->getSrvK());
 }
 /*!
  * \brief set srvKinect data sended by GUI
@@ -188,33 +188,36 @@ void MainServer::setGUISrvKinect(srvKinect newSrvK)
     //adaptamos QTimers si varia Refresco
     if ( !newSrvK.m_bEnvioColor && timerVideo->isActive() ){
         timerVideo->stop();
-    }else if( config->srvK.m_ulRefrescoColor != newSrvK.m_ulRefrescoColor ){
+    }else if( config->getSrvK().m_ulRefrescoColor != newSrvK.m_ulRefrescoColor ){
         timerVideo->start(newSrvK.m_ulRefrescoColor);
     }
     if ( !newSrvK.m_bEnvioDepth && timerDepth->isActive() ){
         timerDepth->stop();
-    }else if( config->srvK.m_ulRefrescoDepth != newSrvK.m_ulRefrescoDepth ){
+    }else if( config->getSrvK().m_ulRefrescoDepth != newSrvK.m_ulRefrescoDepth ){
         timerDepth->start(newSrvK.m_ulRefrescoDepth);
     }
-    if ( !(config->srvK.m_bEnvio3D || config->srvK.m_bEnvio2D || config->srvK.m_bEnvioBarrido) && timer3D->isActive() ){
+    if ( !(config->getSrvK().m_bEnvio3D || config->getSrvK().m_bEnvio2D || config->getSrvK().m_bEnvioBarrido) && timer3D->isActive() ){
         timer3D->stop();
-    }else if( config->srvK.m_ulRefresco3D != newSrvK.m_ulRefresco3D ){
+    }else if( config->getSrvK().m_ulRefresco3D != newSrvK.m_ulRefresco3D ){
         timer3D->start(newSrvK.m_ulRefresco3D);
     }
     //actualizamos ángulo en kinect
-    if( config->srvK.m_iAnguloKinect != newSrvK.m_iAnguloKinect ){
+    if( config->getSrvK().m_iAnguloKinect != newSrvK.m_iAnguloKinect ){
         config->setSrvK(newSrvK);
-        emit updateSrvKinect(config->srvK);
+        emit updateSrvKinect(config->getSrvK());
         updateKinect();
         return;
     }
     config->setSrvK(newSrvK);
     emit updateClientSrvKinect(newSrvK);
 }
-
+/*!
+ * \brief getter for current srvKinect
+ * \return current srvKinect in MainServer::ConfigData::srvK
+ */
 srvKinect MainServer::getSrvKinect()
 {
-    return config->srvK;
+    return config->getSrvK();
 }
 
 /*!
@@ -264,17 +267,17 @@ accel MainServer::getAccel()
  */
 void MainServer::go()
 {
-    if ( config->srvK.m_bEnvioColor ){
+    if ( config->getSrvK().m_bEnvioColor ){
         nextVideoFrame();
-        timerVideo->start(config->srvK.m_ulRefrescoColor);
+        timerVideo->start(config->getSrvK().m_ulRefrescoColor);
     }
-    if ( config->srvK.m_bEnvioDepth ){
+    if ( config->getSrvK().m_bEnvioDepth ){
         nextDepthFrame();
-        timerDepth->start(config->srvK.m_ulRefrescoDepth);
+        timerDepth->start(config->getSrvK().m_ulRefrescoDepth);
     }
-    if ( config->srvK.m_bEnvio3D || config->srvK.m_bEnvio2D || config->srvK.m_bEnvioBarrido ){
+    if ( config->getSrvK().m_bEnvio3D || config->getSrvK().m_bEnvio2D || config->getSrvK().m_bEnvioBarrido ){
         next3DFrame();
-        timer3D->start(config->srvK.m_ulRefresco3D);
+        timer3D->start(config->getSrvK().m_ulRefresco3D);
     }
 }
 /*!
@@ -297,7 +300,6 @@ void MainServer::init()
     device = NULL;
     numKinects = getKnumber();
     currentKIndex = -1;
-    flag = false;
     //config data
     config = new ConfigData(this);
 
@@ -400,33 +402,35 @@ void MainServer::nextDepthFrame()
  */
 void MainServer::next3DFrame()
 {
-    if( config->srvK.m_bEnvio3D && config->srvK.m_bEnvio2D && config->srvK.m_bEnvioBarrido ){
+    srvKinect k;
+    config->copySrvK(&k);
+    if( k.m_bEnvio3D && k.m_bEnvio2D && k.m_bEnvioBarrido ){
         ///------------------------------------------------------------------TIEMPOS, parte se calcula aquí
         ///------------------------------------------------------------------
-        device->getAll( &structBuffers, &config->srvK );
+        device->getAll( &structBuffers, &k );
         emit print3D();
         emit print2D();
         emit printBarrido();
-    }else if (config->srvK.m_bEnvio3D && config->srvK.m_bEnvio2D) {
-        device->get2and3( &structBuffers, &config->srvK );
+    }else if (config->getSrvK().m_bEnvio3D && config->getSrvK().m_bEnvio2D) {
+        device->get2and3( &structBuffers, &k );
         emit print3D();
         emit print2D();
-    }else if (config->srvK.m_bEnvio3D && config->srvK.m_bEnvioBarrido) {
-        device->get3dBarrido( &structBuffers, &config->srvK );
+    }else if (config->getSrvK().m_bEnvio3D && config->getSrvK().m_bEnvioBarrido) {
+        device->get3dBarrido( &structBuffers, &k );
         emit print3D();
         emit printBarrido();
-    }else if (config->srvK.m_bEnvio2D && config->srvK.m_bEnvioBarrido) {
-        device->get2dBarrido( &structBuffers, &config->srvK );
+    }else if (config->getSrvK().m_bEnvio2D && config->getSrvK().m_bEnvioBarrido) {
+        device->get2dBarrido( &structBuffers, &k );
         emit print2D();
         emit printBarrido();
-    }else if(config->srvK.m_bEnvio3D){
-        device->get3d(&structBuffers, &config->srvK );
+    }else if(config->getSrvK().m_bEnvio3D){
+        device->get3d(&structBuffers, &k );
         emit print3D();
-    }else if(config->srvK.m_bEnvio2D){
-        device->get2(&structBuffers, &config->srvK );
+    }else if(config->getSrvK().m_bEnvio2D){
+        device->get2(&structBuffers, &k );
         emit print2D();
-    }else if(config->srvK.m_bEnvioBarrido){
-        device->getBarrido(&structBuffers, &config->srvK );
+    }else if(config->getSrvK().m_bEnvioBarrido){
+        device->getBarrido(&structBuffers, &k );
         emit printBarrido();
     }
 }

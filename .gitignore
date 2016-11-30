@@ -2,10 +2,13 @@
 
 # txt temporary files
 *~
+.~*odt#
 
-# debug folders
-a_client-Debug/
-a_server-Debug/
+# debug & doc folders
+build-a_client-Debug/
+build-a_server-Debug/
+html/
+latex/
 
 # Compiled Object files
 *.slo

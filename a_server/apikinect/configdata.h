@@ -18,9 +18,6 @@ class ConfigData : public QObject
     Q_OBJECT
 public:
     explicit ConfigData(QObject *parent = 0);
-    srvKinect srvK;
-    int ledOption;
-    int irOption;
 
 signals:
     void ledOptionChanged(int option);
@@ -35,8 +32,12 @@ public slots:
     void setLedOption(int option);
     srvKinect getSrvK();
     void setSrvK(srvKinect newSrvK);
+    void copySrvK(srvKinect *newSrvK);
 
 private:
+    srvKinect srvK;
+    int ledOption;
+    int irOption;
 
 };
 

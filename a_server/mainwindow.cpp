@@ -11,7 +11,7 @@
 #include <QNetworkInterface>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "apikinect/maincore.h"
+#include "apikinect/mainserver.h"
 
 /*!
  * \class MainWindow
@@ -28,10 +28,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-//    numDevices = freenect.deviceCount();
 
     init();
     setServerIp();
+
+    server = new MainServer(false,this);//VISOR
+    this->setWindowTitle("apikinect visor");
+    //server = new MainServer(true, this);//SERVER
+    //this->setWindowTitle("apikinect server");
     putKcombo();//fill combo box with available kinects
     paintBarridoAxes();//paint axes on barrido view
     initconnects();
@@ -43,12 +47,13 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     qDebug("MainWindow::~MainWindow()");
-    delete sceneVideo;
-    delete sceneDepth;
-    delete sceneBarre;
+    sceneVideo->deleteLater();
+    sceneDepth->deleteLater();
+    sceneBarre->deleteLater();
     if( imgVideo != NULL ) delete imgVideo;
     if( imgDepth != NULL ) delete imgDepth;
     if( imgBarre != NULL ) delete imgBarre;
+
     delete ui;
 }
 /*!
@@ -62,11 +67,11 @@ void MainWindow::paintVideo()
 //    QTime t;
 //    t.start();
     if( imgVideo != NULL ) delete imgVideo;
-    imgVideo = new QImage(apicore->videoBuf.data(),640,480,QImage::Format_RGB888);
+    imgVideo = new QImage(server->videoBuf.data(),640,480,QImage::Format_RGB888);
     sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(ui->gvVideo->width()-2,ui->gvVideo->height()-2,Qt::KeepAspectRatio));
     //sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(320,240,Qt::KeepAspectRatio));
     ui->gvVideo->show();
-//    apicore->timeVector[e_video] = t.elapsed();
+//    server->timeVector[e_video] = t.elapsed();
 }
 /*!
  * \brief draw depth image
@@ -83,7 +88,7 @@ void MainWindow::paintDepth()
     unsigned char r,g,b, distaChar;
     for(int x = 0; x < 640; x++){
         for(int y = 0; y < 480; y++){
-            int value = apicore->depthBuf[(x+y*640)];//value is distance in mm
+            int value = server->depthBuf[(x+y*640)];//value is distance in mm
             distaChar = value/39;//to transform distance to 8bit grey
             r=g=b=distaChar;
             imgDepth->setPixel(x,y,qRgb(r,g,b));// data to fit in 8 bits
@@ -92,7 +97,7 @@ void MainWindow::paintDepth()
     sceneDepth->addPixmap(QPixmap::fromImage(*imgDepth).scaled(ui->gvDepth->width()-2,ui->gvDepth->height()-2,Qt::KeepAspectRatio));
     //sceneDepth->addPixmap(QPixmap::fromImage(*imgDepth).scaled(320,240,Qt::KeepAspectRatio));
     ui->gvDepth->show();
-//    apicore->timeVector[e_depth] = t.elapsed();
+//    server->timeVector[e_depth] = t.elapsed();
 }
 /*!
  * \brief draw Barrido
@@ -114,16 +119,16 @@ void MainWindow::paintBarrido()
         ellipseVector.resize(0);
     }
     for(int i=0;i<360;i++){
-        if(apicore->barridoBuf[i] == 0) continue;//no data info no plot
-        y = 235-(235*apicore->barridoBuf[i]/getSrvKinect().m_fZMax);//scale barridoBuf[i] to fit in screen
-        //y = 235-(235*apicore->barridoBuf[i]/ui->le_limits_Zmax->text().toInt());
+        if(server->barridoBuf[i] == 0) continue;//no data info no plot
+        y = 235-(235*server->barridoBuf[i]/getSrvKinect().m_fZMax);//scale barridoBuf[i] to fit in screen
+        //y = 235-(235*server->barridoBuf[i]/ui->le_limits_Zmax->text().toInt());
         x = 320*(360-i)/360;
         ellipseVector.push_back(new QGraphicsEllipseItem(x,y,1.0,1.0));
         sceneBarre->addItem(ellipseVector[aux]);
         aux++;
     }
     ui->gvBarrido->show();
-//    apicore->timeVector[e_barrido] = t.elapsed();
+//    server->timeVector[e_barrido] = t.elapsed();
 }
 /*!
  * \brief draw axes on sceneBarre to show on gvBarrido.
@@ -146,9 +151,9 @@ void MainWindow::paint3D()
 {
 //    QTime t;
 //    t.start();
-    ui->glWidget->setCloud(apicore->p3rgbBuf);
+    ui->glWidget->setCloud(server->p3rgbBuf);
     ui->glWidget->repaint();
-//    apicore->timeVector[e_3] = t.elapsed();
+//    server->timeVector[e_3] = t.elapsed();
 }
 /*!
  * \brief utility not implemented
@@ -157,9 +162,9 @@ void MainWindow::paint2D()
 {
 //    QTime t;
 //    t.start();
-    ui->glWidget->setCloud(apicore->p2Buf);
+    ui->glWidget->setCloud(server->p2Buf);
     ui->glWidget->repaint();
-//    apicore->timeVector[e_2] = t.elapsed();
+//    server->timeVector[e_2] = t.elapsed();
 }
 /*!
  * \brief aux function to show time spent in calculus or painting.
@@ -168,38 +173,38 @@ void MainWindow::printTimeVector()
 {
     //qDebug("MainWindow::printTimeVector");
     QString str,aux;
-    accel a(apicore->getAccel());
+    accel a(server->getAccel());
     str = "get video = ";
-    aux.setNum(apicore->getTime(e_video));
+    aux.setNum(server->getTime(e_video));
     str.append(aux);
     aux = " \nget depth = ";
     str.append(aux);
-    aux.setNum(apicore->getTime(e_depth));
+    aux.setNum(server->getTime(e_depth));
     str.append(aux);
     aux = " \nget 3D = ";
     str.append(aux);
-    aux.setNum(apicore->getTime(e_3));
+    aux.setNum(server->getTime(e_3));
     str.append(aux);
     aux = "\nget 2D = ";
     str.append(aux);
-    aux.setNum(apicore->getTime(e_2));
+    aux.setNum(server->getTime(e_2));
     str.append(aux);
     aux = "\nget Barrido = ";
     str.append(aux);
-    aux.setNum(apicore->getTime(e_barrido));
+    aux.setNum(server->getTime(e_barrido));
     str.append(aux);
     //pinta las aceleraciones----------------------accel
     aux = "\n  accel X = ";
     str.append(aux);
-    aux.setNum(apicore->getAccel().accel_x);
+    aux.setNum(server->getAccel().accel_x);
     str.append(aux);
     aux = "\n  accel Y = ";
     str.append(aux);
-    aux.setNum(apicore->getAccel().accel_y);
+    aux.setNum(server->getAccel().accel_y);
     str.append(aux);
     aux = "\n  accel Z = ";
     str.append(aux);
-    aux.setNum(apicore->getAccel().accel_z);
+    aux.setNum(server->getAccel().accel_z);
     str.append(aux);
     ui->textEdit->setText(str);
 }
@@ -212,11 +217,11 @@ void MainWindow::setSrvKinect(srvKinect newSrvK)
     //qDebug("MainWindow::setSrvKinect");
     QString auxStr;
     ui->le_limits_kbaseangle->setText(auxStr.setNum(newSrvK.m_fAngulo));
-    ui->le_limits_kangle->setText(auxStr.setNum(newSrvK.m_iAnguloKinect));
+    ui->sb_limits_kangle->setValue(newSrvK.m_iAnguloKinect);
     ui->le_limits_high->setText(auxStr.setNum(newSrvK.m_fAltura));
-    ui->le_limits_Ymin->setText(auxStr.setNum(newSrvK.m_fYMin));
-    ui->le_limits_Ymax->setText(auxStr.setNum(newSrvK.m_fYMax));
-    ui->le_limits_Zmax->setText(auxStr.setNum(newSrvK.m_fZMax));//---------6/21
+    ui->sb_limits_Ymin->setValue(newSrvK.m_fYMin);
+    ui->sb_limits_Ymax->setValue(newSrvK.m_fYMax);
+    ui->sb_limits_Zmax->setValue(newSrvK.m_fZMax);//---------6/21
 
     ui->slider_D_refresh->setValue(newSrvK.m_ulRefresco3D);
     ui->slider_D_module->setValue(newSrvK.m_usModulo3D);
@@ -229,8 +234,8 @@ void MainWindow::setSrvKinect(srvKinect newSrvK)
     if(newSrvK.m_bCompress3D) ui->cb_D_comp->setChecked(true);
     else ui->cb_D_comp->setChecked(false);
     ui->le_D_ecu->setText(auxStr.setNum(newSrvK.m_iBarridoEcu));
-    ui->le_D_Ymin->setText(auxStr.setNum(newSrvK.m_iBarridoYMin));
-    ui->le_D_Ymax->setText(auxStr.setNum(newSrvK.m_iBarridoYMax));//-------15/21
+    ui->sb_D_Ymin->setValue(newSrvK.m_iBarridoYMin);
+    ui->sb_D_Ymax->setValue(newSrvK.m_iBarridoYMax);//-------15/21
 
     ui->slider_depth->setValue(newSrvK.m_ulRefrescoDepth);
     if(newSrvK.m_bEnvioDepth) ui->cb_depth->setChecked(true);
@@ -252,11 +257,11 @@ srvKinect MainWindow::getSrvKinect()
 {
     srvKinect srvK;
     srvK.m_fAngulo = ui->le_limits_kbaseangle->text().toDouble();
-    srvK.m_iAnguloKinect = ui->le_limits_kangle->text().toInt();
+    srvK.m_iAnguloKinect = ui->sb_limits_kangle->text().toInt();
     srvK.m_fAltura = ui->le_limits_high->text().toFloat();
-    srvK.m_fYMin = ui->le_limits_Ymin->text().toFloat();
-    srvK.m_fYMax = ui->le_limits_Ymax->text().toFloat();
-    srvK.m_fZMax =  ui->le_limits_Zmax->text().toFloat();//-------------6/21
+    srvK.m_fYMin = ui->sb_limits_Ymin->text().toFloat();
+    srvK.m_fYMax = ui->sb_limits_Ymax->text().toFloat();
+    srvK.m_fZMax =  ui->sb_limits_Zmax->text().toFloat();//-------------6/21
 
     srvK.m_ulRefresco3D = ui->slider_D_refresh->value();
     srvK.m_usModulo3D = ui->slider_D_module->value();
@@ -265,8 +270,8 @@ srvKinect MainWindow::getSrvKinect()
     srvK.m_bEnvioBarrido = ui->cb_D_barrido->isChecked();
     srvK.m_bCompress3D = ui->cb_D_comp->isChecked();
     srvK.m_iBarridoEcu = ui->le_D_ecu->text().toInt();
-    srvK.m_iBarridoYMin = ui->le_D_Ymin->text().toInt();
-    srvK.m_iBarridoYMax = ui->le_D_Ymax->text().toInt();//-------------15/21
+    srvK.m_iBarridoYMin = ui->sb_D_Ymin->text().toInt();
+    srvK.m_iBarridoYMax = ui->sb_D_Ymax->text().toInt();//-------------15/21
 
     srvK.m_ulRefrescoDepth = ui->slider_depth->value();
     srvK.m_bEnvioDepth = ui->cb_depth_send->isChecked();
@@ -285,10 +290,7 @@ srvKinect MainWindow::getSrvKinect()
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     qDebug("MainWindow::closeEvent()");
-    if(apicore->getDeviceStatus()){
-        apicore->~MainCore();
-    }
-    //exit(0);
+    server->deleteLater();
 }
 
 /*!
@@ -296,12 +298,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
  */
 void MainWindow::init()
 {
-    apicore = new MainCore(this);
     ellipseVector.reserve(360);
     ellipseVector.resize(0);
-    sceneVideo = new QGraphicsScene;
-    sceneDepth = new QGraphicsScene;
-    sceneBarre = new QGraphicsScene;
+    sceneVideo = new QGraphicsScene(this);
+    sceneDepth = new QGraphicsScene(this);
+    sceneBarre = new QGraphicsScene(this);
     imgVideo = NULL;
     imgDepth = NULL;
     imgBarre = NULL;
@@ -314,18 +315,7 @@ void MainWindow::init()
  */
 void MainWindow::setServerIp()
 {
-    QString ip;
-    QList<QHostAddress> ipList = QNetworkInterface::allAddresses();
-    // use first non-localhost IPv4 address
-    for (int i = 0; i < ipList.size(); ++i) {
-        if( (ipList.at(i) != QHostAddress::LocalHost) && ipList.at(i).toIPv4Address() ) {
-            ip = ipList.at(i).toString();
-            break;
-        }
-    }
-    // if none, then use localhost
-    if (ip.isEmpty()) ip = QHostAddress(QHostAddress::LocalHost).toString();
-    ui->label_ip->setText(ip);
+    ui->label_findedIp->setText(server->getServerIp());
 }
 /*!
  * \brief fill combo list with detected kinect index
@@ -333,18 +323,18 @@ void MainWindow::setServerIp()
 void MainWindow::putKcombo()
 {
 
-    if( apicore->getKnumber() == 0 ){//num devices 0 => no kinect connected
+    if( server->getKnumber() == 0 ){//num devices 0 => no kinect connected
         ui->combo->addItem("No kinect detected");
         ui->textEdit->setText(" No kinect detected, unable to start");
         ui->textEdit->show();
         ui->pbGo->setEnabled(false);
-        ui->pbStop->setEnabled(false);
     }else{
-        for( int i = 0; i < apicore->getKnumber() ; i++){
+        for( int i = 0; i < server->getKnumber() ; i++){
             QString str;
             ui->combo->addItem(str.setNum(i));
         }
         ui->textEdit->setText(" Select kinect in combo box to start\n1-click combo\n2-click device number in combo\n3-click Go");
+        ui->pbGo->setEnabled(true);
     }
 }
 /*!
@@ -370,36 +360,34 @@ void MainWindow::apiconnects()
 {
     //API
     //connect maincore signals -> this slots
-    connect(apicore,SIGNAL(printVideo()),this,SLOT(paintVideo()));
-    connect(apicore,SIGNAL(printDepth()),this,SLOT(paintDepth()));
-    connect(apicore,SIGNAL(print3D()),this,SLOT(paint3D()));
-    connect(apicore,SIGNAL(print2D()),this,SLOT(paint2D()));
-    connect(apicore,SIGNAL(printBarrido()),this,SLOT(paintBarrido()));
-    connect(apicore,SIGNAL(updateSrvKinect(srvKinect)),this,SLOT(setSrvKinect(srvKinect)));
-    emit apicore->updateSrvKinect(apicore->getSrvKinect());
+    connect(server,SIGNAL(printVideo()),this,SLOT(paintVideo()));
+    connect(server,SIGNAL(printDepth()),this,SLOT(paintDepth()));
+    connect(server,SIGNAL(print3D()),this,SLOT(paint3D()));
+    connect(server,SIGNAL(print2D()),this,SLOT(paint2D()));
+    connect(server,SIGNAL(printBarrido()),this,SLOT(paintBarrido()));
+    connect(server,SIGNAL(updateSrvKinect(srvKinect)),this,SLOT(setSrvKinect(srvKinect)));
+    emit server->updateSrvKinect(server->getSrvKinect());
 }
 /*!
  * \brief start selected kinect data flow
  */
 void MainWindow::on_pbGo_clicked()
 {
-    ui->pbGo->setEnabled(false);
-    ui->pbStop->setEnabled(true);
-
-    if( comboIndex != apicore->getCurrentKIndex() && apicore->getCurrentKIndex() != -1  ){
-        apicore->stopK(apicore->getCurrentKIndex());
+    if( comboIndex != server->getCurrentKIndex() && server->getCurrentKIndex() != -1  ){
+        server->stopK(server->getCurrentKIndex());
+    }else if( server->getCurrentKIndex() == -1 ){
+        server->setCurrentKIndex(0);
     }
-    apicore->startK(comboIndex);
-    apicore->setCurrentKIndex(comboIndex);
-    apicore->go();
+    server->startK(comboIndex);
+    server->setCurrentKIndex(comboIndex);
+    server->go();
 }
 /*!
  * \brief stop kinect data flow and delete handler
  */
 void MainWindow::on_pbStop_clicked()
 {
-    apicore->stop();
-    ui->pbStop->setEnabled(false);
+    server->stop();
 }
 /*!
  * \brief when combo item activated -> buttons activated
@@ -409,14 +397,11 @@ void MainWindow::on_combo_activated(int index)
 {
     //qDebug("MainWindow::on_combo_activated()");
     comboIndex = index;
-    if ( comboIndex < 0 || comboIndex >= apicore->getKnumber() ){
+    if ( comboIndex < 0 || comboIndex >= server->getKnumber() ){
         ui->textEdit->setText(" ERROR kinect index out of bounds. Restart.");
         return;
-    }else if( apicore->getCurrentKIndex() == -1 || apicore->getCurrentKIndex() != index ){
+    }else if( server->getCurrentKIndex() == -1 || server->getCurrentKIndex() != index ){
         ui->pbGo->setEnabled(true);
-    }else if( apicore->getCurrentKIndex() == index ){
-        ui->pbGo->setEnabled(false);
-        ui->pbStop->setEnabled(true);
     }
 }
 /*!
@@ -491,4 +476,3 @@ void MainWindow::sliderModuleUp(int i)
     }
     ui->slider_D_module->setSliderPosition(i);
 }
-
