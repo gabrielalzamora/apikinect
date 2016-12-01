@@ -38,3 +38,4 @@ unix:!macx: PRE_TARGETDEPS += $$PWD/apikinect/lib/libfreenect.a
 unix:!macx: PRE_TARGETDEPS += $$PWD/apikinect/lib/libGLU.a
 
 QMAKE_CXXFLAGS  += -std=gnu++11
+

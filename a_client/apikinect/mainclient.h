@@ -46,7 +46,8 @@ signals:
     void sendMessage(QString str);// send String info
 
 public slots:
-    void srvKinectFromGUI(SrvKinect *newSrvK);//srvKinect changed in GUI save & send to server
+    srvKinect getSrvK();//return MainClient srvKinect
+    void srvKinectFromGUI(srvKinect *newSrvK);//srvKinect changed in GUI save & send to server
     void setHost(QString addr);
     void setSrvKinect(srvKinect newSrvK);// update config->srvK with new data
     void requestNext(QTcpSocket *socket);// request next image/pointsCloud/accel... to server

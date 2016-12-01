@@ -9,9 +9,9 @@
  */
 
 #include <QNetworkInterface>
+#include <QTime>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "apikinect/mainserver.h"
 
 /*!
  * \class MainWindow
@@ -29,17 +29,18 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //server = new MainServer(false,this);//VISOR
+    //this->setWindowTitle("apikinect visor");
+    server = new MainServer(true, this);//SERVER
+    this->setWindowTitle("apikinect server");
+
     init();
     setServerIp();
-
-    server = new MainServer(false,this);//VISOR
-    this->setWindowTitle("apikinect visor");
-    //server = new MainServer(true, this);//SERVER
-    //this->setWindowTitle("apikinect server");
     putKcombo();//fill combo box with available kinects
     paintBarridoAxes();//paint axes on barrido view
     initconnects();
     apiconnects();
+
 }
 /*!
  * \brief destructor
@@ -47,15 +48,9 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     qDebug("MainWindow::~MainWindow()");
-    sceneVideo->deleteLater();
-    sceneDepth->deleteLater();
-    sceneBarre->deleteLater();
-    if( imgVideo != NULL ) delete imgVideo;
-    if( imgDepth != NULL ) delete imgDepth;
-    if( imgBarre != NULL ) delete imgBarre;
-
     delete ui;
 }
+
 /*!
  * \brief draw video image
  *
@@ -64,14 +59,17 @@ MainWindow::~MainWindow()
  */
 void MainWindow::paintVideo()
 {
-//    QTime t;
-//    t.start();
+    if( !ui->cb_video->isChecked() ){
+        server->setTime(e_paint_video, 0);
+        return;
+    }
+    QTime t;
+    t.start();
     if( imgVideo != NULL ) delete imgVideo;
-    imgVideo = new QImage(server->videoBuf.data(),640,480,QImage::Format_RGB888);
+    imgVideo = new QImage(server->videoBuf.data(),RES_KINECT_VIDEO_W,RES_KINECT_VIDEO_H,QImage::Format_RGB888);
     sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(ui->gvVideo->width()-2,ui->gvVideo->height()-2,Qt::KeepAspectRatio));
-    //sceneVideo->addPixmap(QPixmap::fromImage(*imgVideo).scaled(320,240,Qt::KeepAspectRatio));
     ui->gvVideo->show();
-//    server->timeVector[e_video] = t.elapsed();
+    server->setTime(e_paint_video, t.elapsed());
 }
 /*!
  * \brief draw depth image
@@ -81,8 +79,12 @@ void MainWindow::paintVideo()
  */
 void MainWindow::paintDepth()
 {
-//    QTime t;
-//    t.start();
+    if( !ui->cb_depth->isChecked() ){
+        server->setTime(e_paint_depth, 0);
+        return;
+    }
+    QTime t;
+    t.start();
     if( imgDepth != NULL ) delete imgDepth;
     imgDepth = new QImage(640,480,QImage::Format_RGB32);
     unsigned char r,g,b, distaChar;
@@ -95,20 +97,23 @@ void MainWindow::paintDepth()
         }
     }
     sceneDepth->addPixmap(QPixmap::fromImage(*imgDepth).scaled(ui->gvDepth->width()-2,ui->gvDepth->height()-2,Qt::KeepAspectRatio));
-    //sceneDepth->addPixmap(QPixmap::fromImage(*imgDepth).scaled(320,240,Qt::KeepAspectRatio));
     ui->gvDepth->show();
-//    server->timeVector[e_depth] = t.elapsed();
+    server->setTime(e_paint_depth, t.elapsed());
 }
 /*!
  * \brief draw Barrido
  *
- * This function is called when paint new Barrido data is needed.
+ * This function is called to paint new Barrido data.
  * Is painted on ui->gvBarrido sceneBarre using 'barridoBuf' vector data.
  */
 void MainWindow::paintBarrido()
 {
-//    QTime t;
-//    t.start();
+    if( !ui->cb_barrido->isChecked() ){
+        server->setTime(e_paint_barrido, 0);
+        return;
+    }
+    QTime t;
+    t.start();
     int x,y;
     int aux(0);
     if( ellipseVector.size() != 0 ){
@@ -120,15 +125,14 @@ void MainWindow::paintBarrido()
     }
     for(int i=0;i<360;i++){
         if(server->barridoBuf[i] == 0) continue;//no data info no plot
-        y = 235-(235*server->barridoBuf[i]/getSrvKinect().m_fZMax);//scale barridoBuf[i] to fit in screen
-        //y = 235-(235*server->barridoBuf[i]/ui->le_limits_Zmax->text().toInt());
+        y = 235-(235*server->barridoBuf[i]/server->getSrvKinect().m_fZMax);//scale barridoBuf[i] to fit in screen
         x = 320*(360-i)/360;
         ellipseVector.push_back(new QGraphicsEllipseItem(x,y,1.0,1.0));
         sceneBarre->addItem(ellipseVector[aux]);
         aux++;
     }
     ui->gvBarrido->show();
-//    server->timeVector[e_barrido] = t.elapsed();
+    server->setTime(e_paint_barrido, t.elapsed());
 }
 /*!
  * \brief draw axes on sceneBarre to show on gvBarrido.
@@ -145,26 +149,40 @@ void MainWindow::paintBarridoAxes()
     sceneBarre->addLine(ejey,ejesPen);
 }
 /*!
- * \brief utility not implemented
+ * \brief draw 3D
+ *
+ * This function is called to paint new 3D data.
+ * Is painted on ui->glWidget using 'p3rgbBuf' vector data.
  */
 void MainWindow::paint3D()
 {
-//    QTime t;
-//    t.start();
+    if( !ui->cb_3->isChecked() ){
+        server->setTime(e_paint_3, 0);
+        return;
+    }
+    QTime t;
+    t.start();
     ui->glWidget->setCloud(server->p3rgbBuf);
     ui->glWidget->repaint();
-//    server->timeVector[e_3] = t.elapsed();
+    server->setTime(e_paint_3, t.elapsed());
 }
 /*!
- * \brief utility not implemented
+ * \brief draw 2D
+ *
+ * This function is called to paint new 2D data.
+ * Is painted on ui->gvBarrido sceneBarre using 'p2Buf' vector data.
  */
 void MainWindow::paint2D()
 {
-//    QTime t;
-//    t.start();
+    if( !ui->cb_2->isChecked() ){
+        server->setTime(e_paint_2, 0);
+        return;
+    }
+    QTime t;
+    t.start();
     ui->glWidget->setCloud(server->p2Buf);
     ui->glWidget->repaint();
-//    server->timeVector[e_2] = t.elapsed();
+    server->setTime(e_paint_2, t.elapsed());
 }
 /*!
  * \brief aux function to show time spent in calculus or painting.
@@ -172,6 +190,7 @@ void MainWindow::paint2D()
 void MainWindow::printTimeVector()
 {
     //qDebug("MainWindow::printTimeVector");
+    //pinta el tiempo para captar datos----------calcula
     QString str,aux;
     accel a(server->getAccel());
     str = "get video = ";
@@ -193,6 +212,27 @@ void MainWindow::printTimeVector()
     str.append(aux);
     aux.setNum(server->getTime(e_barrido));
     str.append(aux);
+    //pinta el tiempo para pintar datos-----------dibuja
+    aux = "\npaint video = ";
+    str.append(aux);
+    aux.setNum(server->getTime(e_paint_video));
+    str.append(aux);
+    aux = " \npaint depth = ";
+    str.append(aux);
+    aux.setNum(server->getTime(e_paint_depth));
+    str.append(aux);
+    aux = " \npaint 3D = ";
+    str.append(aux);
+    aux.setNum(server->getTime(e_paint_3));
+    str.append(aux);
+    aux = "\npaint 2D = ";
+    str.append(aux);
+    aux.setNum(server->getTime(e_paint_2));
+    str.append(aux);
+    aux = "\npaint Barrido = ";
+    str.append(aux);
+    aux.setNum(server->getTime(e_paint_barrido));
+    str.append(aux);
     //pinta las aceleraciones----------------------accel
     aux = "\n  accel X = ";
     str.append(aux);
@@ -207,6 +247,7 @@ void MainWindow::printTimeVector()
     aux.setNum(server->getAccel().accel_z);
     str.append(aux);
     ui->textEdit->setText(str);
+    ui->textEdit->show();
 }
 /*!
  * \brief set ConfigData gui as newSrvK says
@@ -284,31 +325,24 @@ srvKinect MainWindow::getSrvKinect()
 }
 
 /*!
- * \brief override window close event to stop loop and delete apikinect handler...working
- * \param [in] event
- */
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    qDebug("MainWindow::closeEvent()");
-    server->deleteLater();
-}
-
-/*!
  * \brief MainWindow::init
  */
 void MainWindow::init()
 {
     ellipseVector.reserve(360);
     ellipseVector.resize(0);
+
     sceneVideo = new QGraphicsScene(this);
     sceneDepth = new QGraphicsScene(this);
     sceneBarre = new QGraphicsScene(this);
-    imgVideo = NULL;
-    imgDepth = NULL;
-    imgBarre = NULL;
+
     ui->gvVideo->setScene(sceneVideo);
     ui->gvDepth->setScene(sceneDepth);
     ui->gvBarrido->setScene(sceneBarre);
+
+    imgVideo = NULL;
+    imgDepth = NULL;
+    imgBarre = NULL;
 }
 /*!
  * \brief write my server ip on gui label
@@ -322,26 +356,27 @@ void MainWindow::setServerIp()
  */
 void MainWindow::putKcombo()
 {
-
     if( server->getKnumber() == 0 ){//num devices 0 => no kinect connected
         ui->combo->addItem("No kinect detected");
-        ui->textEdit->setText(" No kinect detected, unable to start");
+        ui->textEdit->setText(" No kinect detected, connect one and restart.");
         ui->textEdit->show();
-        ui->pbGo->setEnabled(false);
     }else{
         for( int i = 0; i < server->getKnumber() ; i++){
             QString str;
             ui->combo->addItem(str.setNum(i));
         }
         ui->textEdit->setText(" Select kinect in combo box to start\n1-click combo\n2-click device number in combo\n3-click Go");
-        ui->pbGo->setEnabled(true);
     }
+    ui->combo->setEnabled(true);
+    ui->combo->setEditable(false);
+    ui->pbGo->setEnabled(false);
 }
 /*!
  * \brief connect data tab_2 widgets
  */
 void MainWindow::initconnects()
 {
+    //qDebug("MainWindow::initconnects");
     //connect spin box -> slider value
     connect(ui->sb_video,SIGNAL(valueChanged(int)),this,SLOT(sliderVideoUp(int)));
     connect(ui->sb_depth,SIGNAL(valueChanged(int)),this,SLOT(sliderDepthUp(int)));
@@ -352,42 +387,41 @@ void MainWindow::initconnects()
     connect(ui->slider_depth,SIGNAL(sliderMoved(int)),ui->sb_depth,SLOT(setValue(int)));
     connect(ui->slider_D_refresh,SIGNAL(sliderMoved(int)),ui->sb_D_refresh,SLOT(setValue(int)));
     connect(ui->slider_D_module,SIGNAL(sliderMoved(int)),ui->sb_D_module,SLOT(setValue(int)));
+    //connect data changed to signal
+    connect(ui->tabWidget,SIGNAL(currentChanged(int)),this,SLOT(upServerSrvK(int)));
+
 }
 /*!
  * \brief connect api signals to gui functions
  */
 void MainWindow::apiconnects()
 {
+    qDebug("MainWindow::apiconnects");
     //API
-    //connect maincore signals -> this slots
+    //connect mainserver signals -> this slots
     connect(server,SIGNAL(printVideo()),this,SLOT(paintVideo()));
     connect(server,SIGNAL(printDepth()),this,SLOT(paintDepth()));
     connect(server,SIGNAL(print3D()),this,SLOT(paint3D()));
     connect(server,SIGNAL(print2D()),this,SLOT(paint2D()));
     connect(server,SIGNAL(printBarrido()),this,SLOT(paintBarrido()));
+    connect(server,SIGNAL(printTimeVector()),this,SLOT(printTimeVector()));
     connect(server,SIGNAL(updateSrvKinect(srvKinect)),this,SLOT(setSrvKinect(srvKinect)));
-    emit server->updateSrvKinect(server->getSrvKinect());
 }
 /*!
  * \brief start selected kinect data flow
  */
 void MainWindow::on_pbGo_clicked()
 {
-    if( comboIndex != server->getCurrentKIndex() && server->getCurrentKIndex() != -1  ){
-        server->stopK(server->getCurrentKIndex());
-    }else if( server->getCurrentKIndex() == -1 ){
-        server->setCurrentKIndex(0);
+    qDebug("MainWindow::on_pbGo_clicked");
+    if( ui->pbGo->isChecked() ){
+        qDebug("CONNECT");
+        qDebug("comboIndex %u",comboIndex);
+        server->setCurrentKIndex(comboIndex);
+        server->go();
+    }else{
+        qDebug("DESCON");
+        server->stop();//stop timers
     }
-    server->startK(comboIndex);
-    server->setCurrentKIndex(comboIndex);
-    server->go();
-}
-/*!
- * \brief stop kinect data flow and delete handler
- */
-void MainWindow::on_pbStop_clicked()
-{
-    server->stop();
 }
 /*!
  * \brief when combo item activated -> buttons activated
@@ -400,9 +434,8 @@ void MainWindow::on_combo_activated(int index)
     if ( comboIndex < 0 || comboIndex >= server->getKnumber() ){
         ui->textEdit->setText(" ERROR kinect index out of bounds. Restart.");
         return;
-    }else if( server->getCurrentKIndex() == -1 || server->getCurrentKIndex() != index ){
-        ui->pbGo->setEnabled(true);
     }
+    if( server->getCurrentKIndex() == -1 ) ui->pbGo->setEnabled(true);
 }
 /*!
  * \brief utility function to link video slider and line edit
@@ -476,3 +509,23 @@ void MainWindow::sliderModuleUp(int i)
     }
     ui->slider_D_module->setSliderPosition(i);
 }
+/*!
+ * \brief utility function to tell server to update srvKinect
+ * \param i to detect if update or not
+ */
+void MainWindow::upServerSrvK(int i)
+{
+    qDebug("MainWindow::upServerSrvK tab:%u",i);
+    if(!i){
+        //server->setIR(ui->cb_ir->isChecked());//IR no habilitado
+        //if(ui->rb_off->isChecked()) i = 0;//solo entra si i=0
+        if(ui->rb_green->isChecked()) i = 1;
+        if(ui->rb_red->isChecked()) i = 2;
+        if(ui->rb_yellow->isChecked()) i = 3;
+        if(ui->rb_blinkG->isChecked()) i = 4;
+        if(ui->rb_blinkRY->isChecked()) i = 6;
+        server->setLed(i);
+        server->setGUISrvKinect(getSrvKinect());
+    }
+}
+

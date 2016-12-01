@@ -46,12 +46,20 @@ MainClient::~MainClient()
     delete skt_barrido;
     delete skt_accel;
 }
+/*!
+ * \brief MainClient::getSrvK
+ * \return
+ */
+srvKinect MainClient::getSrvK()
+{
+    return config->srvK;
+}
 
 /*!
  * \brief if srvKinect changed on GUI save changes and tell to server
  * \param newSrvK
  */
-void MainClient::srvKinectFromGUI(SrvKinect *newSrvK)
+void MainClient::srvKinectFromGUI(srvKinect *newSrvK)
 {
     //qDebug("MainClient::srvKinectFromGUI");
     config->srvK.m_fAngulo = newSrvK->m_fAngulo;

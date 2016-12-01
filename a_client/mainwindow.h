@@ -68,44 +68,11 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
-    QHostAddress hostAddr;//------------------DEBUG
-    QTcpSocket *skt_srvK;
-    int connectedServer;
-    //Video
-    QTcpSocket *skt_video;
-    int connectedVideo;
-    quint64 sizeVideo;
-    QGraphicsScene *sceneVideo;
-    QGraphicsItem *itemVideo;
-    //Depth
-    QTcpSocket *skt_depth;
-    int connectedDepth;
-    quint64 sizeDepth;
-    QGraphicsScene *sceneDepth;
-    QGraphicsItem *itemDepth;
-    //3D
-    QTcpSocket *skt_3D;
-    int connected3D;
-    quint64 size3D;
-    std::vector<point3c> p3Buf;
-    //2D
-    QTcpSocket *skt_2D;
-    int connected2D;
-    quint64 size2D;
-    std::vector<point2>p2Buf;
-    //Barrido
-    QTcpSocket *skt_barrido;
-    int connectedBarrido;
-    quint64 sizeBarrido;
+    MainClient * client;
+
     QGraphicsScene *sceneBarrido;
     QGraphicsEllipseItem *ellipse;//!< holds single Barrido point to add to sceneBarrido
     std::vector<QGraphicsEllipseItem*> ellipseVector;//!< holds barrido points to paint in ellipse
-    std::vector<uint32_t> barridoBuf;
-    //Accel
-    QTcpSocket *skt_accel;
-    int connectedAccel;
-    quint64 sizeAccel;
-    accel acceleration;
 
 };
 

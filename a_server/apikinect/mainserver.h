@@ -51,16 +51,21 @@ public slots:
     void startK(int indexK=0);
     void stopK(int indexK=0);
     void updateKinect();//send current ledOption and angle to kinect
-    //setters & getters
+    //getters & setters
     QString getServerIp();
     int getDeviceStatus();
     void setSrvKinect(srvKinect newSrvK);//set new configuration data
     void setGUISrvKinect(srvKinect newSrvK);//set GUI data here and on clients
     srvKinect getSrvKinect();
+    void setLed(int ledOpt);
+    int getLed();
+    void setIR(bool irOpt);
+    bool getIR();
     void setCurrentKIndex(int index);
     int getCurrentKIndex();
     int getKnumber();
     int getTime(eOption opt);//in milliseconds : e_video, e_depth, e_3, e_2, e_barrido, e_accel
+    void setTime(eOption opt,int msec);
     accel getAccel();
     //start timers
     void go();// start sending data to mainwindow acord to configdata info
@@ -76,6 +81,7 @@ private slots:
     void nextVideoFrame();// convenience function to use qtimers
     void nextDepthFrame();// convenience function to use qtimers
     void next3DFrame();// convenience function to use qtimers
+    void nextTimeVector();// convenience function to use qtimers
 
 protected:
 
@@ -86,6 +92,7 @@ private:
     QTimer *timerVideo;
     QTimer *timerDepth;
     QTimer *timer3D;
+    QTimer *timerTime;
 
     Freenect::Freenect freenect;// Freenect class object to start events thread and Apikinect
     freenect_context *context;// point to usb context associated to kinect data handling

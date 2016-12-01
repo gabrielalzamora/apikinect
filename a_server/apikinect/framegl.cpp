@@ -86,7 +86,6 @@ void FrameGL::setClearColor(const QColor &color)
  */
 void FrameGL::setCloud(std::vector<point3rgb> c)
 {
-    //std::lock_guard<std::mutex> lock(mtxCloud);//actually not necesary, its the only fuction writting on pCloud
     pcloud_3d=c;
 }
 /*!

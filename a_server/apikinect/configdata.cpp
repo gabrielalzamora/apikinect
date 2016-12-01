@@ -61,6 +61,7 @@ ConfigData::ConfigData(QObject *parent) : QObject(parent)
 void ConfigData::setLedOption(int option)
 {
     if(option != ledOption){
+        if(0<=option && option < 7)
         ledOption = option;
         emit ledOptionChanged(option);
     }
@@ -79,7 +80,7 @@ int ConfigData::getLedOption()
  */
 void ConfigData::setSrvK(srvKinect newSrvK)
 {
-    //qDebug("ConfigData::setSrvK");
+    qDebug("ConfigData::setSrvK");
 /*    qDebug("-----------------------------------");
     qDebug("m_fAngulo %f ponemos %f",srvK.m_fAngulo,newSrvK.m_fAngulo);
     qDebug("m_iAnguloKinect %d ponemos %d",srvK.m_iAnguloKinect,newSrvK.m_iAnguloKinect);

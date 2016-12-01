@@ -31,53 +31,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    connectedServer = 0;
-    skt_srvK = new QTcpSocket(this);
-    //video
-    skt_video = new QTcpSocket(this);
-    connectedVideo = 0;
-    sizeVideo = 0;
-    sceneVideo = new QGraphicsScene(this);
-    ui->gvVideo->setScene(sceneVideo);
-    //depth
-    skt_depth = new QTcpSocket(this);
-    connectedDepth = 0;
-    sizeDepth = 0;
-    sceneDepth = new QGraphicsScene(this);
-    ui->gvDepth->setScene(sceneDepth);
-    //3D
-    skt_3D = new QTcpSocket(this);
-    connected3D = 0;
-    size3D = 0;
-    p3Buf.reserve(300000);
-    p3Buf.resize(0);
-    //2D
-    skt_2D = new QTcpSocket(this);
-    connected2D = 0;
-    size2D = 0;
-    p2Buf.reserve(300000);
-    p2Buf.resize(0);
-    //barrido
-    skt_barrido = new QTcpSocket(this);
-    connectedBarrido = 0;
-    sizeBarrido = 0;
-    sceneBarrido = new QGraphicsScene(this);
-    ui->gvBarrido->setScene(sceneBarrido);
-    p3Buf.resize(300000);//reserve for maximum number of points
-    barridoBuf.resize(360);
-    ellipseVector.reserve(360);
-    ellipseVector.resize(0);
-    ellipse = NULL;
-    //accel
-    skt_accel = new QTcpSocket(this);
-    connectedAccel = 0;
-    sizeAccel = 0;
-    acceleration.accel_x = acceleration.accel_y = acceleration.accel_z = 0.0;
+
 
     connect(ui->lineEdit,SIGNAL(editingFinished()),this,SLOT(setHost()));
 
     connect(ui->pbGo,SIGNAL(released()),this,SLOT(initConnection()));
-    connect(ui->pbStop,SIGNAL(released()),this,SLOT(closeConnection()));
+///    connect(ui->pbStop,SIGNAL(released()),this,SLOT(closeConnection()));
 
     connect(ui->tab_2,SIGNAL(dataChanged()),this,SLOT(dataChanged()));
     connect(ui->tab_2,SIGNAL(ledOptionChanged()),this,SLOT(dataChanged()));
@@ -109,10 +68,6 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete skt_srvK;
-    delete skt_video;
-    delete skt_depth;
-    //...
 }
 /*!
  * \brief auxiliary function to read host written by user in GUI QLineEdit
@@ -123,8 +78,8 @@ void MainWindow::setHost()
 //    ui->lineEdit->setText("192.168.0.157");///-----------------DEBUG
 //    ui->lineEdit->setText("127.0.0.1");///-----------------DEBUG
     hostAddr = QHostAddress(ui->lineEdit->text());
-    ui->textBrowser->setText("connect to server ip:");
-    ui->textBrowser->append(ui->lineEdit->text());
+    ui->textEdit->setText("connect to server ip:");
+    ui->textEdit->append(ui->lineEdit->text());
     ui->pbGo->setEnabled(true);
 }
 /*!

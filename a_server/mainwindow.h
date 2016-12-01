@@ -13,7 +13,6 @@
 #include <QMainWindow>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
-#include "apikinect/typekinect.h"
 #include "apikinect/mainserver.h"
 
 class QGraphicsScene;
@@ -49,9 +48,6 @@ public slots:
     void setSrvKinect(srvKinect newSrvK);//ConfigData => ui->tab_2
     srvKinect getSrvKinect();//ui->tab_2 => ConfigData
 
-protected:
-    void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
-
 private slots:
     void init();
     void setServerIp();
@@ -60,16 +56,14 @@ private slots:
     //gui interactions
     void apiconnects();
     void on_pbGo_clicked();
-    void on_pbStop_clicked();
     void on_combo_activated(int index);
     //data link in tab_2
     void sliderVideoUp(int i);
     void sliderDepthUp(int i);
     void slider3DUp(int i);
     void sliderModuleUp(int i);
+    void upServerSrvK(int i);
     //apikinect
-
-
 
 private:
     Ui::MainWindow *ui;
@@ -80,9 +74,9 @@ private:
     QImage *imgVideo;
     QImage *imgDepth;
     QImage *imgBarre;
-    QGraphicsEllipseItem *ellipse;//!< holds single Barrido point to add to sceneBarre
-    std::vector<QGraphicsEllipseItem*> ellipseVector;//!< holds Barrido points to paint in ellipse
+    QGraphicsEllipseItem *ellipse;// holds single Barrido point to add to sceneBarre
+    std::vector<QGraphicsEllipseItem*> ellipseVector;// holds Barrido points to paint in ellipse
 
-    MainServer * server;//!< handle all kinect+server+client interactions
+    MainServer * server;// handle all kinect+server+client interactions
 };
 #endif // MAINWINDOW_H
