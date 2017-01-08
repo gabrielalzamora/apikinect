@@ -32,19 +32,17 @@ signals:
     void rb_video_toggled(bool checked);
 
 public slots:
-    void paint();
+    void paintVideo();
+    void paintDepth();
 
 private slots:
     void init();
     void putKcombo();
     void initConnects();
     //gui interactions
-    void on_pb_go_Clicked();
     void on_combo_activated(int index);
     void on_rb_video_toggled(bool checked);
-//    void on_rb_depth_toggled(bool checked);//just need one of radio buttons connected
-
-
+    void on_pb_go_clicked();
 
 private:
     Ui::MainWindow *ui;

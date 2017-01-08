@@ -458,7 +458,7 @@ void MainServer::attendNewClient()
 }
 
 /*!
- * \brief MainServer::nextVideoFrame
+ * \brief load next Video frame to Video vector
  */
 void MainServer::nextVideoFrame()
 {
@@ -467,7 +467,7 @@ void MainServer::nextVideoFrame()
     emit printVideo();
 }
 /*!
- * \brief MainServer::nextDepthFrame
+ * \brief load next Depth frame to depth vector
  */
 void MainServer::nextDepthFrame()
 {

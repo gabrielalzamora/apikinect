@@ -10,6 +10,7 @@
 #define MAINCALIB_H
 
 #include <QObject>
+#include <QTimer>
 #include "apikinect/apikinect.h"
 
 class MainCalib : public QObject
@@ -22,7 +23,8 @@ public:
     std::vector<uint16_t> depth;
 
 signals:
-    void showImg();
+    void printVideo();//warn gui there's a video frame ready to be painted
+    void printDepth();
 
 public slots:
     //freenect kinect
@@ -30,8 +32,8 @@ public slots:
     void stopK(int indexK=0);
     void updateKinect();//set led green and angle kinect =0º
     //getters & setters
-    int get_format();
-    void set_format(bool videoFormat);
+    bool get_format();
+    void set_format(bool format);
     int get_indexK();
     void set_indexK(int index);
     int get_numKinects();
@@ -39,14 +41,18 @@ public slots:
 
 private slots:
     void init();
+    void nextVideoFrame();// convenience function to use qtimers
+    void nextDepthFrame();// convenience function to use qtimers
 
 private:
-    int format;// =0 depth, =1 video Kinect selected data format
+    bool videoFormat;// false=depth, true=video Kinect selected data format
     int numKinects;// number of detected kinects
-    int indexK;// index of active kinect
+    int indexK;// index of active kinect (indexK=-1 non active Kinect)
     Freenect::Freenect freenect;// Freenect class object to start events thread and Apikinect
     freenect_context *context;// point to usb context associated to kinect data handling
     Apikinect *device;// object that handle kinect sending led, angle orders, receiving frames, acceleration data
+    QTimer *timerVideo;
+    QTimer *timerDepth;
 };
 
 #endif // MAINCALIB_H

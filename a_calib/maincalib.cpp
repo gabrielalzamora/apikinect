@@ -28,17 +28,26 @@ void MainCalib::startK(int indexK)
 {
     qDebug("MainCalib::startK");
     device = &freenect.createDevice<Apikinect>(indexK);
-    device->startVideo();
-    device->startDepth();
-
+    if(videoFormat){
+        device->startVideo();
+        timerVideo->start(34);//34 ms ~30 fps
+    }else{
+        device->startDepth();
+        timerDepth->start(34);//34 ms ~30 fps
+    }
     set_indexK(indexK);
 }
 
 void MainCalib::stopK(int indexK)
 {
     qDebug("MainCalib::stopK");
-    device->stopDepth();
-    device->stopVideo();
+    if(videoFormat){
+        timerVideo->stop();
+        device->stopVideo();
+    }else{
+        timerDepth->stop();
+        device->stopDepth();
+    }
     freenect.deleteDevice(indexK);
     set_indexK(-1);
     device = NULL;
@@ -59,19 +68,19 @@ void MainCalib::updateKinect()
  * \brief getter for format
  * \return format
  */
-int MainCalib::get_format()
+bool MainCalib::get_format()
 {
     //qDebug("MainCalib::set_format()");
-    return format;
+    return videoFormat;
 }
 /*!
  * \brief setter for format
  * \param [in] formatSelected
  */
-void MainCalib::set_format(bool videoFormat)
+void MainCalib::set_format(bool format)
 {
     qDebug("MainCalib::set_format()");
-    format=videoFormat;
+    videoFormat=format;
 }
 /*!
  * \brief getter for currentKIndex
@@ -122,4 +131,27 @@ void MainCalib::init()
     set_format(true);
     video.reserve(640*480*3);//video pixel r+g+b = 3*uint8_t
     depth.reserve(640*480*2);//depth pixel uint16_t = 2*uint8_t
+
+    timerDepth = new QTimer(this);
+    timerVideo = new QTimer(this);
+    connect(timerDepth,SIGNAL(timeout()),this,SLOT(nextDepthFrame()));
+    connect(timerVideo,SIGNAL(timeout()),this,SLOT(nextVideoFrame()));
+}
+/*!
+ * \brief load next Video frame to Video vector
+ */
+void MainCalib::nextVideoFrame()
+{
+    //qDebug("MainCalib::nextVideoFrame");
+    device->getRGB(video);
+    emit printVideo();
+}
+/*!
+ * \brief load next Depth frame to depth vector
+ */
+void MainCalib::nextDepthFrame()
+{
+    //qDebug("MainCalib::nextDepthFrame");
+    device->getDepth(depth);
+    emit printDepth();
 }
