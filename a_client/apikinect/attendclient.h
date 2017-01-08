@@ -20,7 +20,7 @@ class AttendClient : public QObject
 {
     Q_OBJECT
 public:
-    explicit AttendClient(QTcpSocket *socket, pBuf *ptrToBuffers, QObject *parent=0);
+    explicit AttendClient(QTcpSocket *socket, pBuf *ptrToBuffers, int attendID, QObject *parent=0);
 //    explicit AttendClient(QTcpSocket *socket, std::vector<uint8_t> &vectorVideo, QObject *parent=0);//DEBUG
     ~AttendClient();
 
@@ -61,6 +61,7 @@ private slots:
     void sendAccel();
 
 private:
+    int myID;
     QTcpSocket *m_socket;//!< as srvK socket
     quint64 sizeSrvK;
     quint8 flagSrvK;
@@ -69,9 +70,8 @@ private:
     pBuf structBuffers;
     srvKinect srvK;
 
-    QTime t_video, t_depth;//!< to control refresh (refresco)
-    QTime t_3d, t_2d;
-    QTime t_barrido, t_accel;
+    QTime t_video, t_depth;
+    QTime t_3d, t_2d, t_barrido;
 
     //video
     QTcpServer *s_video;

@@ -377,19 +377,18 @@ void MainWindow::putKcombo()
 void MainWindow::initconnects()
 {
     //qDebug("MainWindow::initconnects");
-    //connect spin box -> slider value
-    connect(ui->sb_video,SIGNAL(valueChanged(int)),this,SLOT(sliderVideoUp(int)));
-    connect(ui->sb_depth,SIGNAL(valueChanged(int)),this,SLOT(sliderDepthUp(int)));
-    connect(ui->sb_D_refresh,SIGNAL(valueChanged(int)),this,SLOT(slider3DUp(int)));
-    connect(ui->sb_D_module,SIGNAL(valueChanged(int)),this,SLOT(sliderModuleUp(int)));
     //connect slider -> spin box value
     connect(ui->slider_video,SIGNAL(sliderMoved(int)),ui->sb_video,SLOT(setValue(int)));
     connect(ui->slider_depth,SIGNAL(sliderMoved(int)),ui->sb_depth,SLOT(setValue(int)));
     connect(ui->slider_D_refresh,SIGNAL(sliderMoved(int)),ui->sb_D_refresh,SLOT(setValue(int)));
     connect(ui->slider_D_module,SIGNAL(sliderMoved(int)),ui->sb_D_module,SLOT(setValue(int)));
+    //connect spin box -> slider value
+    connect(ui->sb_video,SIGNAL(valueChanged(int)),this,SLOT(sliderVideoUp(int)));
+    connect(ui->sb_depth,SIGNAL(valueChanged(int)),this,SLOT(sliderDepthUp(int)));
+    connect(ui->sb_D_refresh,SIGNAL(valueChanged(int)),this,SLOT(slider3DUp(int)));
+    connect(ui->sb_D_module,SIGNAL(valueChanged(int)),this,SLOT(sliderModuleUp(int)));
     //connect data changed to signal
     connect(ui->tabWidget,SIGNAL(currentChanged(int)),this,SLOT(upServerSrvK(int)));
-
 }
 /*!
  * \brief connect api signals to gui functions
@@ -406,6 +405,8 @@ void MainWindow::apiconnects()
     connect(server,SIGNAL(printBarrido()),this,SLOT(paintBarrido()));
     connect(server,SIGNAL(printTimeVector()),this,SLOT(printTimeVector()));
     connect(server,SIGNAL(updateSrvKinect(srvKinect)),this,SLOT(setSrvKinect(srvKinect)));
+    //update GUI data with server data
+    setSrvKinect(server->getSrvKinect());
 }
 /*!
  * \brief start selected kinect data flow
@@ -515,7 +516,7 @@ void MainWindow::sliderModuleUp(int i)
  */
 void MainWindow::upServerSrvK(int i)
 {
-    qDebug("MainWindow::upServerSrvK tab:%u",i);
+    //qDebug("MainWindow::upServerSrvK tab:%u",i);
     if(!i){
         //server->setIR(ui->cb_ir->isChecked());//IR no habilitado
         //if(ui->rb_off->isChecked()) i = 0;//solo entra si i=0

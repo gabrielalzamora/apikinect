@@ -80,31 +80,7 @@ int ConfigData::getLedOption()
  */
 void ConfigData::setSrvK(srvKinect newSrvK)
 {
-    qDebug("ConfigData::setSrvK");
-/*    qDebug("-----------------------------------");
-    qDebug("m_fAngulo %f ponemos %f",srvK.m_fAngulo,newSrvK.m_fAngulo);
-    qDebug("m_iAnguloKinect %d ponemos %d",srvK.m_iAnguloKinect,newSrvK.m_iAnguloKinect);
-    qDebug("m_fAltura %f ponemos %f",srvK.m_fAltura,newSrvK.m_fAltura);
-    qDebug("m_fYMin %f ponemos %f",srvK.m_fYMin,newSrvK.m_fYMin);
-    qDebug("m_fYMax %f ponemos %f",srvK.m_fYMax,newSrvK.m_fYMax);
-    qDebug("m_fZMax %f ponemos %f",srvK.m_fZMax,newSrvK.m_fZMax);
-    qDebug("m_ulRefresco3D %lu ponemos %lu",srvK.m_ulRefresco3D,newSrvK.m_ulRefresco3D);
-    qDebug("m_usModulo3D %u ponemos %u",srvK.m_usModulo3D,newSrvK.m_usModulo3D);
-    qDebug("m_bEnvio3D %u ponemos %u",srvK.m_bEnvio3D,newSrvK.m_bEnvio3D);
-    qDebug("m_bEnvio2D %u ponemos %u",srvK.m_bEnvio2D,newSrvK.m_bEnvio2D);
-    qDebug("m_bEnvioBarrido %u ponemos %u",srvK.m_bEnvioBarrido,newSrvK.m_bEnvioBarrido);
-    qDebug("m_bCompress3D %u ponemos %u",srvK.m_bCompress3D,newSrvK.m_bCompress3D);
-    qDebug("m_iBarridoEcu %d ponemos %u",srvK.m_iBarridoEcu,newSrvK.m_iBarridoEcu);
-    qDebug("m_iBarridoYMin %d ponemos %d",srvK.m_iBarridoYMin,newSrvK.m_iBarridoYMin);
-    qDebug("m_iBarridoYMax %d ponemos %d",srvK.m_iBarridoYMax,newSrvK.m_iBarridoYMax);
-    qDebug("m_ulRefrescoDepth %lu ponemos %lu",srvK.m_ulRefrescoDepth,newSrvK.m_ulRefrescoDepth);
-    qDebug("m_bEnvioDepth %u ponemos %u",srvK.m_bEnvioDepth,newSrvK.m_bEnvioDepth);
-    qDebug("m_bCompressDepth %u ponemos %u",srvK.m_bCompressDepth,newSrvK.m_bCompressDepth);
-    qDebug("m_ulRefrescoColor %lu ponemos %lu",srvK.m_ulRefrescoColor,newSrvK.m_ulRefrescoColor);
-    qDebug("m_bEnvioColor %u ponemos %u",srvK.m_bEnvioColor,newSrvK.m_bEnvioColor);
-    qDebug("m_bCompressColor %u ponemos %u",srvK.m_bCompressColor,newSrvK.m_bCompressColor);
-    qDebug("-----------------------------------");
-*/
+
     srvK.m_fAngulo = newSrvK.m_fAngulo;
     if(-27 < newSrvK.m_iAnguloKinect && newSrvK.m_iAnguloKinect < 27){
         srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect;

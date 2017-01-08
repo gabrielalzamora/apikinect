@@ -50,7 +50,7 @@ public:
 private:
     freenect_device * myself;
     std::mutex m_rgb_mutex;//!< mutex to ensure video frame data save access
-    std::mutex m_depth_mutex;//!< mutex to ensure video frame data save access
+    std::mutex m_depth_mutex;//!< mutex to ensure depth frame data save access
 
     std::vector<uint8_t> m_buffer_video;//!< buffer to store usb incoming video frame (see VideoCallback)
     std::vector<uint16_t> m_buffer_depth;//!< buffer to store usb incoming depth frame (see DepthCallback)

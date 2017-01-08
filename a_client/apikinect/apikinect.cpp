@@ -11,6 +11,9 @@
 #include <math.h>       // sqrt(), atan()...
 #include "apikinect.h"
 
+#define CamY 40
+#define CamZ 20
+
 /*!
  * \class Apikinect
  * \brief holds all kinect device properties to read & handel it.
@@ -143,18 +146,20 @@ void Apikinect::getAll(pBuf *structBuffers, srvKinect *aSrvKinect)
     structBuffers->ptrP2Buf->resize(0);//reset 2D points cloud
     for(int i=0;i<360;i++) (*structBuffers->ptrBarridoBuf)[i]=0;//reset Barrido vector
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
+    float angle(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
 
     for (int i = 0; i < 480*640; i+=aSrvKinect->m_usModulo3D)
     {
+
         // Convert from image plane coordinates to world coordinates
-        // Z into screen, Y downwards, X to right as OpenGL
-        // Z = depth*cos(angleKinect)-y*sin(angleKinect)  if angleKinect around x axis
-        p3.z = m_buffer_depth[i]*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
+        // Z into screen, Y downwards, X to the right as OpenGL
+        // Z = depth*cos(angleKinect)+y*sin(angleKinect)  if angleKinect around x axis positive when Kinect upwards
+        p3.z = m_buffer_depth[i]*cos(angle) + ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(angle);
         //within z limits
         if( (p3.z != 0) && (p3.z <= aSrvKinect->m_fZMax) ){
             // Y = (y - cy) * d / fy but remember angleKinect plus camera high
-            // Y = y*cos(angleKinect)+depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
-            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) + m_buffer_depth[i]*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - aSrvKinect->m_fAltura*1000;
+            // Y = y*cos((-1)*angleKinect)-depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
+            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(angle) - m_buffer_depth[i]*sin(angle) - aSrvKinect->m_fAltura*1000;
             //within y limits
             if( (p3.y >= (-1)*aSrvKinect->m_fYMax) && (p3.y <= (-1)*aSrvKinect->m_fYMin) ){//within y limits (remember Y downwards)
                 p2.z = p3.z;
@@ -222,22 +227,21 @@ void Apikinect::get3d(pBuf *structBuffers, srvKinect *aSrvKinect)
     point3rgb p3;//3D + color points cloud
     rgb color;
     structBuffers->ptrP3Buf->resize(0);//reset 3D points cloud
-
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
-    //------------------------------------------------------time pre buffers
+    float angle(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
+
     for (int i = 0; i < 480*640; i+=aSrvKinect->m_usModulo3D)
     {
+
         // Convert from image plane coordinates to world coordinates
         // Z into screen, Y downwards, X to right as OpenGL
-        // Z = depth*cos(angleKinect)-y*sin(angleKinect)  if angleKinect around x axis
-        p3.z = m_buffer_depth[i]*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
-
+        // Z = depth*cos(angleKinect)+y*sin(angleKinect)  if angleKinect around x axis positive when Kinect upwards
+        p3.z = m_buffer_depth[i]*cos(angle) + ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(angle);
         //within z limits
         if( (p3.z != 0) && (p3.z <= aSrvKinect->m_fZMax) ){
             // Y = (y - cy) * d / fy but remember angleKinect plus camera high
-            // Y = y*cos(angleKinect)+depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
-            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) + m_buffer_depth[i]*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - aSrvKinect->m_fAltura*1000;
-
+            // Y = y*cos(angleKinect)-depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
+            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(angle) - m_buffer_depth[i]*sin(angle) - aSrvKinect->m_fAltura*1000;
             //within y limits
             if( (p3.y >= (-1)*aSrvKinect->m_fYMax) && (p3.y <= (-1)*aSrvKinect->m_fYMin) ){//within y limits (remember Y downwards)
                 p3.x = (i%640-(640-1)/2.f)*m_buffer_depth[i]/f;// X = (x - cx) * d / fx
@@ -286,19 +290,18 @@ void Apikinect::get2(pBuf *structBuffers, srvKinect *aSrvKinect)
     point3rgb p3;//3D + color points cloud
     structBuffers->ptrP2Buf->resize(0);//reset 2D points cloud
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
+    float angle(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
 
     for (int i = 0; i < 480*640; i+=aSrvKinect->m_usModulo3D){
         // Convert from image plane coordinates to world coordinates
         // Z into screen, Y downwards, X to right as OpenGL
-        // Z = depth*cos(angleKinect)-y*sin(angleKinect)  if angleKinect around x axis
-        p3.z = m_buffer_depth[i]*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
-
+        // Z = depth*cos(angleKinect)+y*sin(angleKinect)  if angleKinect around x axis
+        p3.z = m_buffer_depth[i]*cos(angle) + ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(angle);
         //within z limits
         if( (p3.z != 0) && (p3.z <= aSrvKinect->m_fZMax) ){
             // Y = (y - cy) * d / fy but remember angleKinect plus camera high
-            // Y = y*cos(angleKinect)+depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
-            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) + m_buffer_depth[i]*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - aSrvKinect->m_fAltura*1000;
-
+            // Y = y*cos(angleKinect)-depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
+            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(angle) - m_buffer_depth[i]*sin(angle) - aSrvKinect->m_fAltura*1000;
             //within y limits
             if( (p3.y >= (-1)*aSrvKinect->m_fYMax) && (p3.y <= (-1)*aSrvKinect->m_fYMin) ){//within y limits (remember Y downwards)
                 p2.z = p3.z;
@@ -352,20 +355,19 @@ void Apikinect::getBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
     point3rgb p3;
     for(int i=0;i<360;i++) (*structBuffers->ptrBarridoBuf)[i]=0;
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
+    float angle(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
 
     for (int i = 0; i < 480*640; i+=aSrvKinect->m_usModulo3D)
     {
         // Convert from image plane coordinates to world coordinates
         // Z into screen, Y downwards, X to right as OpenGL
-        // Z = depth*cos(angleKinect)-y*sin(angleKinect)  if angleKinect around x axis
-        p3.z = m_buffer_depth[i]*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
-
+        // Z = depth*cos(angleKinect)+y*sin(angleKinect)  if angleKinect around x axis
+        p3.z = m_buffer_depth[i]*cos(angle) + ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(angle);
         //within z limits
         if( (p3.z != 0) && (p3.z <= aSrvKinect->m_fZMax) ){
             // Y = (y - cy) * d / fy but remember angleKinect plus camera high
-            // Y = y*cos(angleKinect)+depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
-            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) + m_buffer_depth[i]*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - aSrvKinect->m_fAltura*1000;
-
+            // Y = y*cos(angleKinect)-depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
+            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(angle) - m_buffer_depth[i]*sin(angle) - aSrvKinect->m_fAltura*1000;
             //within y limits
             if( (p3.y >= (-1)*aSrvKinect->m_fYMax) && (p3.y <= (-1)*aSrvKinect->m_fYMin) ){//within y limits (remember Y downwards)
                 p3.x = (i%640-(640-1)/2.f)*m_buffer_depth[i]/f;// X = (x - cx) * d / fx
@@ -396,20 +398,19 @@ void Apikinect::get3dBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
     structBuffers->ptrP3Buf->resize(0);//reset 3D points cloud
     for(int i=0;i<360;i++) (*structBuffers->ptrBarridoBuf)[i]=0;//reset Barrido vector
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
+    float angle(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
 
     for (int i = 0; i < 480*640; i+=aSrvKinect->m_usModulo3D)
     {
         // Convert from image plane coordinates to world coordinates
         // Z into screen, Y downwards, X to right as OpenGL
-        // Z = depth*cos(angleKinect)-y*sin(angleKinect)  if angleKinect around x axis
-        p3.z = m_buffer_depth[i]*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
-
+        // Z = depth*cos(angleKinect)+y*sin(angleKinect)  if angleKinect around x axis
+        p3.z = m_buffer_depth[i]*cos(angle) + ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(angle);
         //within z limits
         if( (p3.z != 0) && (p3.z <= aSrvKinect->m_fZMax) ){
             // Y = (y - cy) * d / fy but remember angleKinect plus camera high
-            // Y = y*cos(angleKinect)+depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
-            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) + m_buffer_depth[i]*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - aSrvKinect->m_fAltura*1000;
-
+            // Y = y*cos(angleKinect)-depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
+            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(angle) - m_buffer_depth[i]*sin(angle) - aSrvKinect->m_fAltura*1000;
             //within y limits
             if( (p3.y >= (-1)*aSrvKinect->m_fYMax) && (p3.y <= (-1)*aSrvKinect->m_fYMin) ){//within y limits (remember Y downwards)
                 p3.x = (i%640-(640-1)/2.f)*m_buffer_depth[i]/f;// X = (x - cx) * d / fx
@@ -446,20 +447,19 @@ void Apikinect::get2dBarrido(pBuf *structBuffers, srvKinect *aSrvKinect)
     structBuffers->ptrP2Buf->resize(0);//reset 2D points cloud
     for(int i=0;i<360;i++) (*structBuffers->ptrBarridoBuf)[i]=0;//reset Barrido vector
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
+    float angle(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
 
     for (int i = 0; i < 480*640; i+=aSrvKinect->m_usModulo3D)
     {
         // Convert from image plane coordinates to world coordinates
         // Z into screen, Y downwards, X to right as OpenGL
-        // Z = depth*cos(angleKinect)-y*sin(angleKinect)  if angleKinect around x axis
-        p3.z = m_buffer_depth[i]*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
-
+        // Z = depth*cos(angleKinect)+y*sin(angleKinect)  if angleKinect around x axis
+        p3.z = m_buffer_depth[i]*cos(angle) + ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(angle);
         //within z limits
         if( (p3.z != 0) && (p3.z <= aSrvKinect->m_fZMax) ){
             // Y = (y - cy) * d / fy but remember angleKinect plus camera high
-            // Y = y*cos(angleKinect)+depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
-            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) + m_buffer_depth[i]*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - aSrvKinect->m_fAltura*1000;
-
+            // Y = y*cos(angleKinect)-depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
+            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(angle) - m_buffer_depth[i]*sin(angle) - aSrvKinect->m_fAltura*1000;
             //within y limits
             if( (p3.y >= (-1)*aSrvKinect->m_fYMax) && (p3.y <= (-1)*aSrvKinect->m_fYMin) ){//within y limits (remember Y downwards)
                 p2.z = p3.z;
@@ -494,20 +494,19 @@ void Apikinect::get2and3(pBuf *structBuffers, srvKinect *aSrvKinect)
     structBuffers->ptrP3Buf->resize(0);//reset 3D points cloud
     structBuffers->ptrP2Buf->resize(0);//reset 2D points cloud
     float f = 595.f;//intrinsec kinect camera parameter fx=fy=f
+    float angle(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
 
     for (int i = 0; i < 480*640; i+=aSrvKinect->m_usModulo3D)
     {
         // Convert from image plane coordinates to world coordinates
         // Z into screen, Y downwards, X to right as OpenGL
-        // Z = depth*cos(angleKinect)-y*sin(angleKinect)  if angleKinect around x axis
-        p3.z = m_buffer_depth[i]*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0);
-
+        // Z = depth*cos(angleKinect)+y*sin(angleKinect)  if angleKinect around x axis
+        p3.z = m_buffer_depth[i]*cos(angle) + ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*sin(angle);
         //within z limits
         if( (p3.z != 0) && (p3.z <= aSrvKinect->m_fZMax) ){
             // Y = (y - cy) * d / fy but remember angleKinect plus camera high
-            // Y = y*cos(angleKinect)+depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
-            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(aSrvKinect->m_iAnguloKinect*M_PI/180.0) + m_buffer_depth[i]*sin(aSrvKinect->m_iAnguloKinect*M_PI/180.0) - aSrvKinect->m_fAltura*1000;
-
+            // Y = y*cos(angleKinect)-depth*sin(angleKinect)-CameraHigh if angleKinect around Ox axis
+            p3.y = ((i/640-(480-1)/2.f)*m_buffer_depth[i]/f)*cos(angle) - m_buffer_depth[i]*sin(angle) - aSrvKinect->m_fAltura*1000;
             //within y limits
             if( (p3.y >= (-1)*aSrvKinect->m_fYMax) && (p3.y <= (-1)*aSrvKinect->m_fYMin) ){//within y limits (remember Y downwards)
                 p2.z = p3.z;

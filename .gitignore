@@ -5,7 +5,6 @@
 .~*odt#
 
 # debug & doc folders
-build-a_client-Debug/
-build-a_server-Debug/
+build-*/
 html/
 latex/

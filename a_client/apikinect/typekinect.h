@@ -150,10 +150,9 @@ typedef struct {
 }pBuf;
 
 /*!
- * \brief to easy locate variables in vectors
+ * \brief to easy locate variables in vectors.
  *
- * In server used in timevector; but in client it's used
- * for frequency control.
+ * Used in timeVector.
  */
 typedef enum {
     e_video,
@@ -163,6 +162,13 @@ typedef enum {
     e_barrido,
     e_accel,
     e_ir,
+    e_paint_video,
+    e_paint_depth,
+    e_paint_3,
+    e_paint_2,
+    e_paint_barrido,
+    e_paint_accel,
+    e_paint_ir,
     e_fly_video,
     e_fly_depth,
     e_fly_3,

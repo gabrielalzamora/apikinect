@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2016  Gabriel Alzamora.
  * Copyright (c) 2016  Raúl Alves.
- * Copyright (c) 2010 individual OpenKinect contributors.
+ * Copyright (c) 2010  individual OpenKinect contributors.
  *
  * This code is licensed to you under the terms of the
  * GNU General Public License. See LICENSE file for the
@@ -86,7 +86,6 @@ void FrameGL::setClearColor(const QColor &color)
  */
 void FrameGL::setCloud(std::vector<point3rgb> c)
 {
-    //std::lock_guard<std::mutex> lock(mtxCloud);//actually not necesary, its the only fuction writting on pCloud
     pcloud_3d=c;
 }
 /*!
@@ -141,7 +140,7 @@ void FrameGL::paintGL()
 
     drawAxis();
     drawCloud();
-    //drawLines();
+    //drawLines();//el de Raul Alves
 
     glPopMatrix();
 }

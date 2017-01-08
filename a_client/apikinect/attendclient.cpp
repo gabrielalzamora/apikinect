@@ -25,7 +25,7 @@
  * \param ptrToBuffers
  * \param parent
  */
-AttendClient::AttendClient(QTcpSocket *socket, pBuf *ptrToBuffers, QObject *parent) : QObject(parent)
+AttendClient::AttendClient(QTcpSocket *socket, pBuf *ptrToBuffers,int attendID, QObject *parent) : QObject(parent)
 {
     qDebug("AttendClient::AttendClient");
     peerAddr = socket->peerAddress();
@@ -41,6 +41,8 @@ AttendClient::AttendClient(QTcpSocket *socket, pBuf *ptrToBuffers, QObject *pare
     structBuffers.ptrP2Buf = ptrToBuffers->ptrP2Buf;
     structBuffers.ptrBarridoBuf = ptrToBuffers->ptrBarridoBuf;
     structBuffers.ptrAccel = ptrToBuffers->ptrAccel;
+
+    myID = attendID;
 
     startServers();
 }
