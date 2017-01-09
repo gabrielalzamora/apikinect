@@ -47,7 +47,7 @@ void MainWindow::paintVideo()
 {
     if ( img != NULL ) delete img;
     img = new QImage(calib->video.data(),640,480,QImage::Format_RGB888);
-    scene->addPixmap(QPixmap::fromImage(*img).scaled(ui->gvImg->width(),ui->gvImg->height(),Qt::KeepAspectRatio));
+    scene->addPixmap(QPixmap::fromImage(*img).scaled(ui->gvImg->width()-2,ui->gvImg->height()-2,Qt::KeepAspectRatio));
     ui->gvImg->show();
 }
 /*!
@@ -59,13 +59,51 @@ void MainWindow::paintVideo()
 void MainWindow::paintDepth()
 {
     if ( img != NULL ) delete img;
-    img = new QImage(640,480,QImage::Format_RGB888);
-    unsigned char z;
+    img = new QImage(640,480,QImage::Format_RGB32);
+    uint8_t z;
     for(int i = 0; i < 640*480; i++){
-        z = calib->depth[i]/39;//to transform distance to 8bit grey
-        img->setPixel(i%640,i/640,qRgb(z,z,z));// data to fit in 8 bits
+        int ocho = calib->depth[i] & 0xff;
+        z =calib->depth[i]>>8;
+        //qDebug(" esto es lo que tiene trabajar con bits %d ocho = %d",z,ocho);
+        switch (calib->depth[i]>>8) {
+        case 0:
+            img->setPixel(i%640,i/640,qRgb(255,255-ocho,255-ocho));
+            break;
+        case 1:
+            img->setPixel(i%640,i/640,qRgb(255,ocho,0));
+            break;
+        case 2:
+            img->setPixel(i%640,i/640,qRgb(255-ocho,255,0));
+            break;
+        case 3:
+            img->setPixel(i%640,i/640,qRgb(0,255,ocho));
+            break;
+        case 4:
+            img->setPixel(i%640,i/640,qRgb(0,255-ocho,255));
+            break;
+        case 5:
+            img->setPixel(i%640,i/640,qRgb(0,0,255-ocho));
+            break;
+        default:
+            img->setPixel(i%640,i/640,qRgb(0,0,0));
+            break;
+        }
+        qApp->processEvents();
     }
-    scene->addPixmap(QPixmap::fromImage(*img).scaled(ui->gvImg->width(),ui->gvImg->height(),Qt::KeepAspectRatio));
+    scene->addPixmap(QPixmap::fromImage(*img).scaled(ui->gvImg->width()-2,ui->gvImg->height()-2,Qt::KeepAspectRatio));
+    ui->gvImg->show();
+}
+
+void MainWindow::paintIR()
+{
+    if ( img != NULL ) delete img;
+    img = new QImage(640,480,QImage::Format_RGB32);
+    uint8_t pix;
+    for( int i=0; i < 640*480; i++){
+        pix=calib->video[i];
+        img->setPixel(i%640,i/640,qRgb(pix,pix,pix));
+    }
+    scene->addPixmap(QPixmap::fromImage(*img).scaled(ui->gvImg->width()-2,ui->gvImg->height()-2,Qt::KeepAspectRatio));
     ui->gvImg->show();
 }
 
@@ -79,12 +117,6 @@ void MainWindow::init()
     ui->gvImg->setScene(scene);
     img = NULL;
     ui->rb_video->setChecked(true);
-
-    //timerDepth = new QTimer(this);
-    //timerVideo = new QTimer(this);
-
-    //connect(timerDepth,SIGNAL(timeout()),this,SLOT(nextDepthFrame()));
-    //connect(timerVideo,SIGNAL(timeout()),this,SLOT(nextVideoFrame()));
 }
 /*!
  * \brief fill combo list with detected kinect index
@@ -113,13 +145,26 @@ void MainWindow::putKcombo()
 void MainWindow::initConnects()
 {
     //qDebug("MainWindow::initConnects()");
-    connect(ui->rb_video,SIGNAL(toggled(bool)),calib,SLOT(set_format(bool)));
+    connect(ui->rb_video,SIGNAL(toggled(bool)),this,SLOT(format()));
+    connect(ui->rb_depth,SIGNAL(toggled(bool)),this,SLOT(format()));
+    connect(ui->rb_ir,SIGNAL(toggled(bool)),this,SLOT(format()));
     //connect mainserver signals -> this slots
     connect(calib,SIGNAL(printVideo()),this,SLOT(paintVideo()));
     connect(calib,SIGNAL(printDepth()),this,SLOT(paintDepth()));
+    connect(calib,SIGNAL(printIR()),this,SLOT(paintIR()));
 }
-
-
+/*!
+ * \brief MainWindow::format
+ */
+void MainWindow::format()
+{
+    //qDebug("MainWindow::format()");
+    if( ui->rb_video->isChecked() ){
+        calib->set_format(1);
+    }else if( ui->rb_depth->isChecked() ){
+        calib->set_format(2);
+    }else calib->set_format(3);
+}
 /*!
  * \brief MainWindow::on_combo_activated
  * \param index
@@ -131,13 +176,6 @@ void MainWindow::on_combo_activated(int index)
     ui->pb_go->setEnabled(true);
     ui->combo->setEnabled(false);
 }
-
-void MainWindow::on_rb_video_toggled(bool checked)
-{
-    qDebug("MainWindow::on_rb_video_toggled()");
-
-}
-
 /*!
  * \brief MainWindow::on_pb_go_Clicked
  */
@@ -148,12 +186,15 @@ void MainWindow::on_pb_go_clicked()
         qDebug("GO");
         calib->startK(comboIndex);
         calib->updateKinect();
+        ui->combo->setEnabled(false);
+        ui->rb_ir->setEnabled(false);
         ui->rb_depth->setEnabled(false);
         ui->rb_video->setEnabled(false);
     }else{
         qDebug("STOP");
         calib->stopK(comboIndex);
         ui->combo->setEnabled(true);
+        ui->rb_ir->setEnabled(true);
         ui->rb_depth->setEnabled(true);
         ui->rb_video->setEnabled(true);
     }

@@ -34,14 +34,15 @@ signals:
 public slots:
     void paintVideo();
     void paintDepth();
+    void paintIR();
 
 private slots:
     void init();
     void putKcombo();
     void initConnects();
-    //gui interactions
+    void format();
+    //gui slots
     void on_combo_activated(int index);
-    void on_rb_video_toggled(bool checked);
     void on_pb_go_clicked();
 
 private:
@@ -50,6 +51,7 @@ private:
     QGraphicsScene *scene;
     QImage *img;
     int comboIndex;
+    uint16_t depth_mm[2048];
 };
 
 #endif // MAINWINDOW_H

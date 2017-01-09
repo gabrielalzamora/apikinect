@@ -15,11 +15,13 @@ TEMPLATE = app
 SOURCES     += main.cpp\
             mainwindow.cpp \
             maincalib.cpp \
-            apikinect/apikinect.cpp
+            apikinect/apikinect2.cpp \
+    cvwork.cpp
 
 HEADERS     += mainwindow.h \
             maincalib.h \
-            apikinect/apikinect.h
+            apikinect/apikinect2.h \
+    cvwork.h
 
 FORMS       += mainwindow.ui
 
@@ -33,6 +35,3 @@ unix:!macx: PRE_TARGETDEPS += $$PWD/apikinect/lib/libfreenect.a
 
 QMAKE_CXXFLAGS  += -std=gnu++11
 
-DISTFILES   += \
-            images/cross106.svg \
-            images/right arrow9.svg
