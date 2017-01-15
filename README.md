@@ -2,8 +2,8 @@
 QT server connected to kinect will send 3d data to clients
 
 in progress...
-
- 1 dic 2016 - Times on. client pissed off, server ~run
+10 jun 2017 - First version
+ 1 dec 2016 - Times on. client pissed off, server ~run
 30 nov 2016 - rearrange Github again
  5 sep 2016 - rearrange GitHub repository
 27 ago 2016 - server check boxes to show kinect info or not

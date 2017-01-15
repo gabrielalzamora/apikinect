@@ -10,7 +10,9 @@
 #include "mainclient.h"
 
 /*!
- * \class MainClient
+ * \class MainClient 
+ * \brief center of client functionality handle sockets
+ * to retrieve server information
  *
  */
 

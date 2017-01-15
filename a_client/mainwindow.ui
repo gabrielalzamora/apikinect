@@ -75,7 +75,7 @@
        </size>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <property name="sizePolicy">
@@ -1162,7 +1162,7 @@
          </size>
         </property>
         <property name="readOnly">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
@@ -1282,6 +1282,14 @@
         <property name="text">
          <string>depth</string>
         </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../../../Imágenes/iconos/essential-ui/png/direction4.png</normaloff>
+          <normalon>../../../Imágenes/iconos/essential-ui/png/cancel21.png</normalon>../../../Imágenes/iconos/essential-ui/png/direction4.png</iconset>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>
@@ -1305,6 +1313,14 @@
         </property>
         <property name="text">
          <string>video</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../../../Imágenes/iconos/essential-ui/png/direction4.png</normaloff>
+          <normalon>../../../Imágenes/iconos/essential-ui/png/cancel21.png</normalon>../../../Imágenes/iconos/essential-ui/png/direction4.png</iconset>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -1330,6 +1346,14 @@
         <property name="text">
          <string>3D</string>
         </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../../../Imágenes/iconos/essential-ui/png/direction4.png</normaloff>
+          <normalon>../../../Imágenes/iconos/essential-ui/png/cancel21.png</normalon>../../../Imágenes/iconos/essential-ui/png/direction4.png</iconset>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>
@@ -1353,6 +1377,14 @@
         </property>
         <property name="text">
          <string>2D</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../../../Imágenes/iconos/essential-ui/png/direction4.png</normaloff>
+          <normalon>../../../Imágenes/iconos/essential-ui/png/cancel21.png</normalon>../../../Imágenes/iconos/essential-ui/png/direction4.png</iconset>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -1378,6 +1410,14 @@
         <property name="text">
          <string>barrido</string>
         </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../../../Imágenes/iconos/essential-ui/png/direction4.png</normaloff>
+          <normalon>../../../Imágenes/iconos/essential-ui/png/cancel21.png</normalon>../../../Imágenes/iconos/essential-ui/png/direction4.png</iconset>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
        </widget>
       </item>
      </layout>
@@ -1401,6 +1441,14 @@
         </property>
         <property name="text">
          <string>accel</string>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../../../Imágenes/iconos/essential-ui/png/direction4.png</normaloff>
+          <normalon>../../../Imágenes/iconos/essential-ui/png/cancel21.png</normalon>../../../Imágenes/iconos/essential-ui/png/direction4.png</iconset>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
         </property>
        </widget>
       </item>

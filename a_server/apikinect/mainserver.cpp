@@ -80,8 +80,8 @@ void MainServer::startK(int indexK)
     currentKIndex = indexK;
 }
 /*!
- * \brief destroy kinect handler.
- * \param [in] index kinect handler index to be destroyed.
+ * \brief destroy indexK kinect handler.
+ * \param [in] index of kinect whose handler will be destroyed.
  */
 void MainServer::stopK(int indexK)
 {
@@ -140,7 +140,7 @@ int MainServer::getDeviceStatus()
 }
 /*!
  * \brief set srvKinect data sended by client
- * \param [in] newSrvK
+ * \param[in] newSrvK
  *
  * set client current srvKinect to MainServer::ConfigData::srvK
  */

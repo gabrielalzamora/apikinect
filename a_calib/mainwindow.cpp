@@ -7,12 +7,14 @@
  * https://www.gnu.org/licenses/gpl.html
  */
 #include <QGraphicsScene>
+#include <QInputDialog>
+#include <QDir>
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 
 /*!
- * \brief MainWindow::MainWindow
+ * \brief GUI to handel Calibration
  * \param parent
  */
 MainWindow::MainWindow(QWidget *parent) :
@@ -45,6 +47,7 @@ MainWindow::~MainWindow()
  */
 void MainWindow::paintVideo()
 {
+    //qDebug("MainWindow::paintVideo()");
     if ( img != NULL ) delete img;
     img = new QImage(calib->video.data(),640,480,QImage::Format_RGB888);
     scene->addPixmap(QPixmap::fromImage(*img).scaled(ui->gvImg->width()-2,ui->gvImg->height()-2,Qt::KeepAspectRatio));
@@ -58,6 +61,7 @@ void MainWindow::paintVideo()
  */
 void MainWindow::paintDepth()
 {
+    //qDebug("MainWindow::paintDepth()");
     if ( img != NULL ) delete img;
     img = new QImage(640,480,QImage::Format_RGB32);
     uint8_t z;
@@ -93,9 +97,16 @@ void MainWindow::paintDepth()
     scene->addPixmap(QPixmap::fromImage(*img).scaled(ui->gvImg->width()-2,ui->gvImg->height()-2,Qt::KeepAspectRatio));
     ui->gvImg->show();
 }
-
+/*!
+ * \brief draw IR image
+ *
+ * This function is called to paint new image data (new frame or image available).
+ * Is painted on ui->gvImg sceneImg using data from 'video' vector data.
+ * IR info is from IR camera, same that provides depth info; but comes as USB video.
+ */
 void MainWindow::paintIR()
 {
+    //qDebug("MainWindow::paintIR()");
     if ( img != NULL ) delete img;
     img = new QImage(640,480,QImage::Format_RGB32);
     uint8_t pix;
@@ -112,11 +123,14 @@ void MainWindow::paintIR()
  */
 void MainWindow::init()
 {
-    qDebug("MainWindow::init()");
+    //qDebug("MainWindow::init()");
     scene = new QGraphicsScene(this);
     ui->gvImg->setScene(scene);
     img = NULL;
+    ui->pb_go->setEnabled(false);
     ui->rb_video->setChecked(true);
+    ui->pb_select->setEnabled(false);
+    ui->pb_save->setEnabled(false);
 }
 /*!
  * \brief fill combo list with detected kinect index
@@ -137,24 +151,28 @@ void MainWindow::putKcombo()
     }
     ui->combo->setEnabled(true);
     ui->combo->setEditable(false);
-    ui->pb_go->setEnabled(false);
 }
 /*!
- * \brief MainWindow::initConnects
+ * \brief connects act as controller on
+ * Model-View-Controller architecture
  */
 void MainWindow::initConnects()
 {
     //qDebug("MainWindow::initConnects()");
+    // ui signals -> this slots
     connect(ui->rb_video,SIGNAL(toggled(bool)),this,SLOT(format()));
     connect(ui->rb_depth,SIGNAL(toggled(bool)),this,SLOT(format()));
     connect(ui->rb_ir,SIGNAL(toggled(bool)),this,SLOT(format()));
-    //connect mainserver signals -> this slots
+    //connect  calib -> this slots
     connect(calib,SIGNAL(printVideo()),this,SLOT(paintVideo()));
     connect(calib,SIGNAL(printDepth()),this,SLOT(paintDepth()));
     connect(calib,SIGNAL(printIR()),this,SLOT(paintIR()));
+    //connect mainwindow -> calib
+
 }
 /*!
- * \brief MainWindow::format
+ * \brief Set on MinCalib MainWindow::calib videoFormat
+ * format: video/depth/IR
  */
 void MainWindow::format()
 {
@@ -166,8 +184,52 @@ void MainWindow::format()
     }else calib->set_format(3);
 }
 /*!
- * \brief MainWindow::on_combo_activated
- * \param index
+ * \brief save current image on GUI to file
+ * \param videoFormat tipe o video format
+ * video/depth/IR
+ */
+void MainWindow::saveImg(int videoFormat)
+{
+    qDebug("MainWindow::saveImg()");
+
+    QDir dir(QDir::current());
+    dir.cd("..");
+    QString file, name;
+
+    bool ok;
+    switch (videoFormat) {
+    case 1:
+        dir.cd("calib_video");
+        name = "video_";
+        break;
+    case 2:
+        dir.cd("calib_depth");
+        name = "depth_";
+        break;
+    case 3:
+        dir.cd("calib_ir");
+        name = "ir_";
+        break;
+    default:
+        ui->textBrowser->append("ERROR MainWindow::saveImg() incorrect videoFormat");
+        return;
+    }
+
+    name = QInputDialog::getText(this,
+                                 tr("write file name"),
+                                 tr("name"),
+                                 QLineEdit::Normal,
+                                 name,
+                                 &ok);
+    if (ok && !name.isEmpty()){
+        file = dir.absolutePath()+"/"+name+".jpg";
+        if( img->save(file) ) ui->textBrowser->append("Image saved");
+        else ui->textBrowser->append("ERROR image not saved");
+    }else ui->textBrowser->setText("file name ERROR");
+}
+/*!
+ * \brief Set user selected Kinect index in combo
+ * \param [in] index number of Kinect device selected
  */
 void MainWindow::on_combo_activated(int index)
 {
@@ -177,7 +239,8 @@ void MainWindow::on_combo_activated(int index)
     ui->combo->setEnabled(false);
 }
 /*!
- * \brief MainWindow::on_pb_go_Clicked
+ * \brief Start Kinect device with index set in combo
+ * clicked twice stop device and destroy its handler
  */
 void MainWindow::on_pb_go_clicked()
 {
@@ -190,6 +253,8 @@ void MainWindow::on_pb_go_clicked()
         ui->rb_ir->setEnabled(false);
         ui->rb_depth->setEnabled(false);
         ui->rb_video->setEnabled(false);
+        ui->pb_save->setEnabled(true);
+        //ui->pb_select->setEnabled(true);
     }else{
         qDebug("STOP");
         calib->stopK(comboIndex);
@@ -197,5 +262,45 @@ void MainWindow::on_pb_go_clicked()
         ui->rb_ir->setEnabled(true);
         ui->rb_depth->setEnabled(true);
         ui->rb_video->setEnabled(true);
+        ui->pb_save->setEnabled(true);
+        //ui->pb_select->setEnabled(false);
     }
+}
+/*!
+ * \brief Save current image to file,
+ * first stop image refresh to select
+ * current QImage to save.
+ */
+void MainWindow::on_pb_save_clicked()
+{
+    qDebug("MainWindow::on_pb_save_clicked()");
+    ui->pb_save->setEnabled(false);
+    switch (calib->get_format()) {
+        case 1:
+            if(calib->timerVideo->isActive()){
+                calib->timerVideo->stop();
+                saveImg(1);
+                calib->timerVideo->start();
+            }else{ saveImg(1);}
+            break;
+        case 2:
+            if(calib->timerDepth->isActive()){
+                calib->timerDepth->stop();
+                saveImg(2);
+                calib->timerDepth->start();
+            }else{ saveImg(2);}
+            break;
+        case 3:
+            if(calib->timerIR->isActive()){
+                calib->timerIR->stop();
+                saveImg(3);
+                calib->timerIR->start();
+
+            }else { saveImg(3);}
+            break;
+        default:
+            break;
+    }
+    ui->pb_save->setEnabled(true);
+    return;
 }

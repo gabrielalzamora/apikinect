@@ -46,9 +46,10 @@ signals:
     void sendMessage(QString str);// send String info
 
 public slots:
-    void srvKinectFromGUI(SrvKinect *newSrvK);//srvKinect changed in GUI save & send to server
     void setHost(QString addr);
     void setSrvKinect(srvKinect newSrvK);// update config->srvK with new data
+    void setGUISrvKinect(srvKinect newSrvK);//set GUI data here and on server
+    srvKinect getSrvKinect();
     void requestNext(QTcpSocket *socket);// request next image/pointsCloud/accel... to server
     void requestStop(QTcpSocket *socket);//request to server disconnect socket
     //config srvKinect
@@ -87,7 +88,7 @@ public slots:
     void finalizeAccel();
     void readDataAccel();
     void socketErrorAccel(QAbstractSocket::SocketError socketError);
-    //void showAccel(accel a);
+    void showAccel(accel a);
 
 public:
     ConfigData *config;

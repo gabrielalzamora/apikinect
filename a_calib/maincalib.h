@@ -22,6 +22,9 @@ public:
     std::vector<uint8_t> video;
     std::vector<uint16_t> depth;
     std::vector<uint8_t> ir;
+    QTimer *timerVideo;
+    QTimer *timerDepth;
+    QTimer *timerIR;
 
 signals:
     void printVideo();//warn gui there's a video frame ready to be painted
@@ -54,9 +57,7 @@ private:
     Freenect::Freenect freenect;// Freenect class object to start events thread and Apikinect2
     freenect_context *context;// point to usb context associated to kinect data handling
     Apikinect2 *device;// object that handle kinect sending led, angle orders, receiving frames, acceleration data
-    QTimer *timerVideo;
-    QTimer *timerDepth;
-    QTimer *timerIR;
+
 };
 
 #endif // MAINCALIB_H

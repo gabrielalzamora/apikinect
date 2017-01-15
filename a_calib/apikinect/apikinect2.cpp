@@ -12,7 +12,7 @@
 #include "apikinect2.h"
 
 /*!
- * \class Apikinect2
+ * \class Apikinect2 adapted Apikinect for Calibration
  * \brief holds all kinect device properties to read & handel it.
  */
 

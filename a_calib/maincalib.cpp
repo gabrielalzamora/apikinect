@@ -8,6 +8,17 @@
  */
 #include "maincalib.h"
 
+/*!
+ * \class MainCalib
+ * \brief class to handle camera calibration and capture
+ * images from Kinect both cameras.
+ */
+/*!
+ * \brief MainCalib::MainCalib initiate memory allocation,
+ * timers and connects that allow comunication to GUI
+ *
+ * \param parent
+ */
 MainCalib::MainCalib(QObject *parent) : QObject(parent)
 {
     init();
@@ -24,8 +35,10 @@ MainCalib::~MainCalib()
     timerIR->deleteLater();
 }
 /*!
- * \brief MainCalib::startK
- * \param indexK
+ * \brief create kinect handler.
+ *
+ * init 'Apikinect device' to handle kinect of indexK.
+ * \param [in] indexK.
  */
 void MainCalib::startK(int indexK)
 {
@@ -47,19 +60,28 @@ void MainCalib::startK(int indexK)
 
     set_indexK(indexK);
 }
-
+/*!
+ * \brief destroy handler of indexK kinect.
+ * \param [in] index kinect handler to be destroyed.
+ */
 void MainCalib::stopK(int indexK)
 {
     //qDebug("MainCalib::stopK");
-    if(videoFormat==1){
+    switch (videoFormat) {
+    case 1:
         timerVideo->stop();
         device->stopVideo();
-    }else if(videoFormat==2){
+        break;
+    case 2:
         timerDepth->stop();
         device->stopDepth();
-    }else if(videoFormat){
+        break;
+    case 3:
         timerIR->stop();
-        device->stopVideo();
+        device->stopVideo();//IR is depth camera but comes in USB video
+        break;
+    default:
+        break;
     }
     freenect.deleteDevice(indexK);
     set_indexK(-1);
@@ -70,7 +92,7 @@ void MainCalib::stopK(int indexK)
  */
 void MainCalib::updateKinect()
 {
-    //qDebug("MainCalib::updateKinect");
+    //qDebug("MainCalib::updateKinect()");
     if( device != NULL ){
         device->setLed(LED_BLINK_RED_YELLOW);
         device->setTiltDegrees(0.0);
@@ -107,7 +129,7 @@ int MainCalib::get_indexK()
 }
 /*!
  * \brief setter of currentKIndex
- * \param index
+ * \param [in]index index of selected Kinect
  */
 void MainCalib::set_indexK(int index)
 {
@@ -172,7 +194,10 @@ void MainCalib::nextDepthFrame()
     device->getDepth(depth);
     emit printDepth();
 }
-
+/*!
+ * \brief load next IR frame to video vector.
+ * IR come in USB video channel.
+ */
 void MainCalib::nextIRFrame()
 {
     //qDebug("MainCalib::nextIRFrame");

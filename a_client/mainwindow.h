@@ -13,6 +13,7 @@
 #include <QMainWindow>
 #include <QGraphicsScene>
 #include <QGraphicsItem>
+#include <QHostAddress>
 #include "apikinect/configdata.h"
 #include "apikinect/mainclient.h"
 
@@ -28,51 +29,60 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+signals:
+    void srvKinectChanged(srvKinect newSrvK);
+    void ledChanged(int lop);
+    void irChanged(int i);
+    //void go(int kindex);//server
+    //void stop(int kindex);//server
+
 public slots:
-    void setHost();
-    void dataChanged();
+    void paintVideo();
+    void paintDepth();
+    void paintBarrido();
+    void paintBarridoAxes();
+    void paint3D();
+    void paint2D();
+    void printTimeVector();
+    void setSrvKinect(srvKinect newSrvK);//ConfigData => ui->tab_2
+    srvKinect getSrvKinect();//ui->tab_2 => ConfigData
+    void printMessage(QString str);
 
 private slots:
-    void requestNext(QTcpSocket *socket);
-    void requestStop(QTcpSocket *socket);
-    //server
-    void initConnection();
-    void closeConnection();
-    void socketErrorVideo();
-    //video
-    void initVideo();
-    void finalizeVideo();
-    void readDataVideo();
-    //depth
-    void initDepth();
-    void finalizeDepth();
-    void readDataDepth();
-    //3D
-    void init3D();
-    void finalize3D();
-    void readData3D();
-    //2D
-    void init2D();
-    void finalize2D();
-    void readData2D();
-    //barrido
-    void barridoAxes();
-    void initBarrido();
-    void finalizeBarrido();
-    void readDataBarrido();
-    //accel
-    void initAccel();
-    void finalizeAccel();
-    void readDataAccel();
-    void showAccel(accel a);
+    void init();
+    void initConnects();
+
+    void setHost();
+
+    void on_pbGo_clicked();
+    void on_pbDepth_clicked();
+    void on_pbVideo_clicked();
+    void on_pb3D_clicked();
+    void on_pb2D_clicked();
+    void on_pbBarrido_clicked();
+    void on_pbAccel_clicked();
+
+    void on_lineEdit_editingFinished();
+    //data link in tab_2
+    void sliderVideoUp(int i);
+    void sliderDepthUp(int i);
+    void slider3DUp(int i);
+    void sliderModuleUp(int i);
+    void upServerSrvK(int i);
 
 private:
     Ui::MainWindow *ui;
-    MainClient * client;
-
-    QGraphicsScene *sceneBarrido;
+    QHostAddress hostAddr;
+    QGraphicsScene *sceneVideo;
+    QGraphicsScene *sceneDepth;
+    QGraphicsScene *sceneBarre;
+    QImage *imgVideo;
+    QImage *imgDepth;
+    QImage *imgBarre;
     QGraphicsEllipseItem *ellipse;//!< holds single Barrido point to add to sceneBarrido
     std::vector<QGraphicsEllipseItem*> ellipseVector;//!< holds barrido points to paint in ellipse
+
+    MainClient * client;// handle all client+server interactions
 
 };
 

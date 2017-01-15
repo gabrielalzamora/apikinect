@@ -29,7 +29,6 @@ public:
 signals:
     void go(int kindex);
     void stop(int kindex);
-    void rb_video_toggled(bool checked);
 
 public slots:
     void paintVideo();
@@ -41,9 +40,11 @@ private slots:
     void putKcombo();
     void initConnects();
     void format();
+    void saveImg(int videoFormat);
     //gui slots
     void on_combo_activated(int index);
     void on_pb_go_clicked();
+    void on_pb_save_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -51,7 +52,6 @@ private:
     QGraphicsScene *scene;
     QImage *img;
     int comboIndex;
-    uint16_t depth_mm[2048];
 };
 
 #endif // MAINWINDOW_H
