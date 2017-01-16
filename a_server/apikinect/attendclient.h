@@ -57,7 +57,9 @@ private slots:
     void refreshBarrido();
     void sendBarrido();
     //accel
+    void connectionAccel();
     void incomingAccel();
+    void refreshAccel();
     void sendAccel();
 
 private:
@@ -103,6 +105,8 @@ private:
     QTcpSocket *skt_accel;
     quint64 sizeAccel;
     quint8 flagAccel;
+
+    void showK(srvKinect srvK);//----------------DEBUG
 };
 
 #endif // ATTENDCLIENT_H

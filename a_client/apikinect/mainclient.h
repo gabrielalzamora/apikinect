@@ -33,6 +33,7 @@ signals:
     void print3D();
     void print2D();
     void printAccel();
+    void printTimeVector();
 
     void socketErrorSignal(bool status);
     void socketErrorSignalVideo(bool status);
@@ -42,7 +43,8 @@ signals:
     void socketErrorSignalBarrido(bool status);
     void socketErrorSignalAccel(bool status);
 
-    void actualizeGUIsrvKinect(SrvKinect *newSrvK);// tell GUI to update srvKinect data shown
+    void updateSrvKinect(srvKinect newSrvK);// tell GUI to update srvKinect data shown
+    void actualizeGUIsrvKinect(SrvKinect *newSrvK);//VisorQT specific note first S in SrvKinect not srvKinect
     void sendMessage(QString str);// send String info
 
 public slots:
@@ -50,6 +52,7 @@ public slots:
     void setSrvKinect(srvKinect newSrvK);// update config->srvK with new data
     void setGUISrvKinect(srvKinect newSrvK);//set GUI data here and on server
     srvKinect getSrvKinect();
+    accel getAccel();
     void requestNext(QTcpSocket *socket);// request next image/pointsCloud/accel... to server
     void requestStop(QTcpSocket *socket);//request to server disconnect socket
     //config srvKinect
@@ -131,6 +134,8 @@ public:
 private:
     void initMainClient();
     void initConnects();
+
+    void showK(srvKinect srvK);//-----DEBUG
 };
 
 #endif // MAINCLIENT_H

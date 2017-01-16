@@ -41,7 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     init();
     paintBarridoAxes();
     initConnects();
-
+    apiConnects();
 
 }
 /*!
@@ -51,6 +51,10 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+    client->deleteLater();
+    sceneVideo->deleteLater();
+    sceneDepth->deleteLater();
+    sceneBarre->deleteLater();
 }
 
 /*!
@@ -189,14 +193,14 @@ void MainWindow::paint2D()
 /*!
  * \brief aux function to show time spent in calculus or painting.
  */
-void MainWindow::printTimeVector()
+void MainWindow::paintTimeVector()
 {
-    //qDebug("MainWindow::printTimeVector");
+    //qDebug("MainWindow::paintTimeVector()");
     //pinta el tiempo para captar datos----------calcula
     QString str,aux;
-//    accel a(client->getAccel());
+    accel a(client->getAccel());
     str = "get video = ";
-//    aux.setNum(client->getTime(e_video));
+/*    aux.setNum(client->getTime(e_video));
     str.append(aux);
     aux = " \nget depth = ";
     str.append(aux);
@@ -235,18 +239,18 @@ void MainWindow::printTimeVector()
     str.append(aux);
 //    aux.setNum(client->getTime(e_paint_barrido));
     str.append(aux);
-    //pinta las aceleraciones----------------------accel
+*/    //pinta las aceleraciones----------------------accel
     aux = "\n  accel X = ";
     str.append(aux);
-//    aux.setNum(client->getAccel().accel_x);
+    aux.setNum(a.accel_x);
     str.append(aux);
     aux = "\n  accel Y = ";
     str.append(aux);
-//    aux.setNum(client->getAccel().accel_y);
+    aux.setNum(a.accel_y);
     str.append(aux);
     aux = "\n  accel Z = ";
     str.append(aux);
-//    aux.setNum(client->getAccel().accel_z);
+    aux.setNum(a.accel_z);
     str.append(aux);
     ui->textEdit->setText(str);
     ui->textEdit->show();
@@ -267,7 +271,7 @@ void MainWindow::setSrvKinect(srvKinect newSrvK)//ConfigData => ui->tab_2
     ui->sb_limits_Zmax->setValue(newSrvK.m_fZMax);//----------------6/21
 
     //ui->slider_D_refresh->setValue(newSrvK.m_ulRefresco3D);
-    ui->sb_depth->setValue(newSrvK.m_ulRefresco3D);
+    ui->sb_D_refresh->setValue(newSrvK.m_ulRefresco3D);
     //ui->slider_D_module->setValue(newSrvK.m_usModulo3D);
     ui->sb_D_module->setValue(newSrvK.m_usModulo3D);
     if(newSrvK.m_bEnvio3D) ui->cb_D_3->setChecked(true);
@@ -295,6 +299,7 @@ void MainWindow::setSrvKinect(srvKinect newSrvK)//ConfigData => ui->tab_2
     else ui->cb_video_send->setChecked(false);
     if(newSrvK.m_bCompressColor) ui->cb_video_comp->setChecked(true);
     else ui->cb_video_comp->setChecked(false);//-------------------21/21
+    ui->tab_2->update();
 }
 /*!
  * \brief return srvKinect obtained from ConfigData gui
@@ -412,9 +417,9 @@ void MainWindow::apiConnects()
     connect(client,SIGNAL(print3D()),this,SLOT(paint3D()));
     connect(client,SIGNAL(print2D()),this,SLOT(paint2D()));
     connect(client,SIGNAL(printBarrido()),this,SLOT(paintBarrido()));
-    connect(client,SIGNAL(printTimeVector()),this,SLOT(printTimeVector()));
+    connect(client,SIGNAL(printTimeVector()),this,SLOT(paintTimeVector()));
     connect(client,SIGNAL(updateSrvKinect(srvKinect)),this,SLOT(setSrvKinect(srvKinect)));
-    //update GUI data with server data
+    //update GUI data with client data
     setSrvKinect(client->getSrvKinect());
 }
 /*!
@@ -438,7 +443,7 @@ void MainWindow::on_pbGo_clicked()
 {
     //qDebug("MainWindow::on_pbGo_clicked");
     if( ui->pbGo->isChecked() ){
-        qDebug("CONNECT");
+        //qDebug("CONNECT");
         client->setHost(ui->lineEdit->text());
         client->initConnection();
         ui->lineEdit->setEnabled(false);
@@ -449,7 +454,7 @@ void MainWindow::on_pbGo_clicked()
         ui->pbBarrido->setEnabled(true);
         ui->pbAccel->setEnabled(true);
     }else{
-        qDebug("DESCON");
+        //qDebug("DESCON");
         client->closeConnection();
         ui->lineEdit->setEnabled(true);
         ui->pbDepth->setEnabled(false);
@@ -690,4 +695,35 @@ void MainWindow::upServerSrvK(int i)
         */
         client->setGUISrvKinect(getSrvKinect());
     }
+}
+
+
+/*!
+ * \brief aux function to debug ConfigData transmission
+ * \param[in] srvK
+ */
+void MainWindow::showK(srvKinect srvK)
+{
+    qDebug("MainWindow::showK()");
+    qDebug("srvK.m_fAngulo %f",srvK.m_fAngulo);
+    qDebug("srvK.m_iAnguloKinect %d",srvK.m_iAnguloKinect);
+    qDebug("srvK.m_fAltura %f",srvK.m_fAltura);
+    qDebug("srvK.m_fYMin %f",srvK.m_fYMin);
+    qDebug("srvK.m_fYMax %f",srvK.m_fYMax);
+    qDebug("srvK.m_fZMax %f",srvK.m_fZMax);
+    qDebug("srvK.m_ulRefresco3D %d",srvK.m_ulRefresco3D);
+    qDebug("srvK.m_usModulo3D %d",srvK.m_usModulo3D);
+    qDebug("srvK.m_bEnvio3D %d", srvK.m_bEnvio3D);
+    qDebug("srvK.m_bEnvio2D %d", srvK.m_bEnvio2D);
+    qDebug("srvK.m_bEnvioBarrido %d", srvK.m_bEnvioBarrido);
+    qDebug("srvK.m_bCompress3D %d", srvK.m_bCompress3D);
+    qDebug("srvK.m_iBarridoEcu %d", srvK.m_iBarridoEcu);
+    qDebug("srvK.m_iBarridoYMin %d", srvK.m_iBarridoYMin);
+    qDebug("srvK.m_iBarridoYMax %d", srvK.m_iBarridoYMax);
+    qDebug("srvK.m_ulRefrescoDepth %d", srvK.m_ulRefrescoDepth);
+    qDebug("srvK.m_bEnvioDepth %d", srvK.m_bEnvioDepth);
+    qDebug("srvK.m_bCompressDepth %d", srvK.m_bCompressDepth);
+    qDebug("srvK.m_ulRefrescoColor %d", srvK.m_ulRefrescoColor);
+    qDebug("srvK.m_bEnvioColor %d", srvK.m_bEnvioColor);
+    qDebug("srvK.m_bCompressColor %d", srvK.m_bCompressColor);
 }

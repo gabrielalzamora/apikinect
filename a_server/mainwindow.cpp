@@ -438,12 +438,12 @@ void MainWindow::on_pbGo_clicked()
 {
     //qDebug("MainWindow::on_pbGo_clicked");
     if( ui->pbGo->isChecked() ){
-        qDebug("CONNECT");
-        qDebug("comboIndex %u",comboIndex);
+        //qDebug("CONNECT");
+        //qDebug("comboIndex %u",comboIndex);
         server->setCurrentKIndex(comboIndex);
         server->go();
     }else{
-        qDebug("DESCON");
+        //qDebug("DESCON");
         server->stop();//stop timers
     }
 }

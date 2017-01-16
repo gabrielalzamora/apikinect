@@ -34,14 +34,14 @@ MainClient::MainClient(QObject *parent) :
  */
 MainClient::~MainClient()
 {
-    delete config;
-    delete skt_config;
-    delete skt_video;
-    delete skt_depth;
-    delete skt_3D;
-    delete skt_2D;
-    delete skt_barrido;
-    delete skt_accel;
+    config->deleteLater();
+    skt_config->deleteLater();
+    skt_video->deleteLater();
+    skt_depth->deleteLater();
+    skt_3D->deleteLater();
+    skt_2D->deleteLater();
+    skt_barrido->deleteLater();
+    skt_accel->deleteLater();
 }
 
 /*!
@@ -59,30 +59,9 @@ void MainClient::setHost(QString addr)
  */
 void MainClient::setSrvKinect(srvKinect newSrvK)
 {
-    //qDebug("MainClient::setSrvKinect");
-    srvKinect srvK;
-    srvK.m_fAngulo = newSrvK.m_fAngulo;
-    srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect;
-    srvK.m_fAltura = newSrvK.m_fAltura;
-    srvK.m_fYMin = newSrvK.m_fYMin;
-    srvK.m_fYMax = newSrvK.m_fYMax;
-    srvK.m_fZMax = newSrvK.m_fZMax;
-    srvK.m_ulRefresco3D = newSrvK.m_ulRefresco3D;
-    srvK.m_usModulo3D = newSrvK.m_usModulo3D;
-    srvK.m_bEnvio3D = newSrvK.m_bEnvio3D;
-    srvK.m_bEnvio2D = newSrvK.m_bEnvio2D;
-    srvK.m_bEnvioBarrido = newSrvK.m_bEnvioBarrido;
-    srvK.m_bCompress3D = newSrvK.m_bCompress3D;
-    srvK.m_iBarridoEcu = newSrvK.m_iBarridoEcu;
-    srvK.m_iBarridoYMin = newSrvK.m_iBarridoYMin;
-    srvK.m_iBarridoYMax = newSrvK.m_iBarridoYMax;
-    srvK.m_ulRefrescoDepth = newSrvK.m_ulRefrescoDepth;
-    srvK.m_bEnvioDepth = newSrvK.m_bEnvioDepth;
-    srvK.m_bCompressDepth = newSrvK.m_bCompressDepth;
-    srvK.m_ulRefrescoColor = newSrvK.m_ulRefrescoColor;
-    srvK.m_bEnvioColor = newSrvK.m_bEnvioColor;
-    srvK.m_bCompressColor = newSrvK.m_bCompressColor;
-    config->setSrvK(srvK);
+    qDebug("MainClient::setSrvKinect");
+    config->setSrvK(newSrvK);
+    emit updateSrvKinect(newSrvK);
 }
 /*!
  * \brief if srvKinect changed on GUI save changes and tell to server
@@ -102,6 +81,14 @@ srvKinect MainClient::getSrvKinect()
 {
     //qDebug("MainClient::getSrvKinect()");
     return config->getSrvK();
+}
+/*!
+ * \brief MainClient::getAccel
+ * \return
+ */
+accel MainClient::getAccel()
+{
+    return acceleration;
 }
 /*!
  * \brief utility function to request new data to socket (in Apikinect way)
@@ -169,7 +156,7 @@ void MainClient::closeConnection()
  */
 void MainClient::readSrvKdata()
 {
-    //qDebug("MainClient::readSrvKdata");
+    qDebug("MainClient::readSrvKdata");
     QDataStream in(skt_config);
     in.setVersion(QDataStream::Qt_5_0);
 
@@ -203,7 +190,8 @@ void MainClient::readSrvKdata()
     in >> srvK.m_ulRefrescoColor;
     in >> srvK.m_bEnvioColor;
     in >> srvK.m_bCompressColor;
-    config->setSrvK(srvK);
+
+    setSrvKinect(srvK);
 
     if(skt_config->bytesAvailable()){
         qDebug("MainClient::readSrvKdata quedan cosas sin leer en el buffer");//DEBUG
@@ -212,8 +200,6 @@ void MainClient::readSrvKdata()
     }
 
     sizeConfig = 0;//to allow reading next message size
-
-    emit actualizeGUIsrvKinect(&srvK);
 }
 /*!
  * \brief send new srvKinect to server
@@ -769,11 +755,10 @@ void MainClient::readDataAccel()
     ioStream >> acceleration.accel_y;
     ioStream >> acceleration.accel_z;
 
-    //emit printAccel();
-    showAccel(acceleration);
-
     sizeAccel = 0;
-    requestNext(skt_accel);
+    emit printTimeVector();
+    //showAccel(acceleration);
+    requestNext(skt_accel);//actually click and will return accell
 }
 /*!
  * \brief tell GUI connection error and close Accel socket
@@ -781,7 +766,7 @@ void MainClient::readDataAccel()
  */
 void MainClient::socketErrorAccel(QAbstractSocket::SocketError socketError)
 {
-    //qDebug("MainClient::socketErrorAccel");
+    qDebug("MainClient::socketErrorAccel");
     sendMessage("Error de conexión socket Accel");
     finalizeAccel();
     emit socketErrorSignalAccel(false);
@@ -792,19 +777,20 @@ void MainClient::socketErrorAccel(QAbstractSocket::SocketError socketError)
  */
 void MainClient::showAccel(accel a)
 {
+    //qDebug("MainClient::showAccel()");
     QString str = "aX = ";
     QString aux;
-    aux.setNum(a.accel_x);
+    aux.setNum(acceleration.accel_x);
     str.append(aux);
     str.append("\n");
     aux = "aY = ";
     str.append(aux);
-    aux.setNum(a.accel_y);
+    aux.setNum(acceleration.accel_y);
     str.append(aux);
     str.append("\n");
     aux = "aZ = ";
     str.append(aux);
-    aux.setNum(a.accel_z);
+    aux.setNum(acceleration.accel_z);
     str.append(aux);
     str.append("\n");
     sendMessage(str);
@@ -878,6 +864,36 @@ void MainClient::initConnects()
     connect(skt_accel,SIGNAL(readyRead()),this,SLOT(readDataAccel()));
     connect(skt_accel,SIGNAL(error(QAbstractSocket::SocketError)),
             this,SLOT(socketErrorAccel(QAbstractSocket::SocketError)));
+}
+
+/*!
+ * \brief aux function to debug ConfigData transmission
+ * \param[in] srvK
+ */
+void MainClient::showK(srvKinect srvK)
+{
+    qDebug("MainClient::showK()");
+    qDebug("srvK.m_fAngulo %f",srvK.m_fAngulo);
+    qDebug("srvK.m_iAnguloKinect %d",srvK.m_iAnguloKinect);
+    qDebug("srvK.m_fAltura %f",srvK.m_fAltura);
+    qDebug("srvK.m_fYMin %f",srvK.m_fYMin);
+    qDebug("srvK.m_fYMax %f",srvK.m_fYMax);
+    qDebug("srvK.m_fZMax %f",srvK.m_fZMax);
+    qDebug("srvK.m_ulRefresco3D %d",srvK.m_ulRefresco3D);
+    qDebug("srvK.m_usModulo3D %d",srvK.m_usModulo3D);
+    qDebug("srvK.m_bEnvio3D %d", srvK.m_bEnvio3D);
+    qDebug("srvK.m_bEnvio2D %d", srvK.m_bEnvio2D);
+    qDebug("srvK.m_bEnvioBarrido %d", srvK.m_bEnvioBarrido);
+    qDebug("srvK.m_bCompress3D %d", srvK.m_bCompress3D);
+    qDebug("srvK.m_iBarridoEcu %d", srvK.m_iBarridoEcu);
+    qDebug("srvK.m_iBarridoYMin %d", srvK.m_iBarridoYMin);
+    qDebug("srvK.m_iBarridoYMax %d", srvK.m_iBarridoYMax);
+    qDebug("srvK.m_ulRefrescoDepth %d", srvK.m_ulRefrescoDepth);
+    qDebug("srvK.m_bEnvioDepth %d", srvK.m_bEnvioDepth);
+    qDebug("srvK.m_bCompressDepth %d", srvK.m_bCompressDepth);
+    qDebug("srvK.m_ulRefrescoColor %d", srvK.m_ulRefrescoColor);
+    qDebug("srvK.m_bEnvioColor %d", srvK.m_bEnvioColor);
+    qDebug("srvK.m_bCompressColor %d", srvK.m_bCompressColor);
 }
 
 

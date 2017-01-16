@@ -85,7 +85,7 @@ void AttendClient::startServers()
     s_barrido->listen(QHostAddress::Any,BARRIDOPORT);
     connect(s_barrido,SIGNAL(newConnection()),this,SLOT(connectionBarrido()));
     s_accel->listen(QHostAddress::Any,ACCELPORT);
-    connect(s_accel,SIGNAL(newConnection()),this,SLOT(incomingAccel()));
+    connect(s_accel,SIGNAL(newConnection()),this,SLOT(connectionAccel()));
 
     sizeSrvK = sizeVideo = sizeDepth = size3d = size2d = sizeBarrido = sizeAccel = 0;
 }
@@ -152,27 +152,27 @@ void AttendClient::sendSrvKinect(srvKinect newSrvK)
     out.setVersion(QDataStream::Qt_5_0);
 
     out << quint64(0);
-    out << (srvK.m_fAngulo = newSrvK.m_fAngulo);
-    out << (srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect);
-    out << (srvK.m_fAltura = newSrvK.m_fAltura);
-    out << (srvK.m_fYMin = newSrvK.m_fYMin);
-    out << (srvK.m_fYMax = newSrvK.m_fYMax);
-    out << (srvK.m_fZMax = newSrvK.m_fZMax);
-    out << (srvK.m_ulRefresco3D = newSrvK.m_ulRefresco3D);
-    out << (srvK.m_usModulo3D = newSrvK.m_usModulo3D);
-    out << (srvK.m_bEnvio3D = newSrvK.m_bEnvio3D);
-    out << (srvK.m_bEnvio2D = newSrvK.m_bEnvio2D);
-    out << (srvK.m_bEnvioBarrido = newSrvK.m_bEnvioBarrido);
-    out << (srvK.m_bCompress3D = newSrvK.m_bCompress3D);
-    out << (srvK.m_iBarridoEcu = newSrvK.m_iBarridoEcu);
-    out << (srvK.m_iBarridoYMin = newSrvK.m_iBarridoYMin);
-    out << (srvK.m_iBarridoYMax = newSrvK.m_iBarridoYMax);
-    out << (srvK.m_ulRefrescoDepth = newSrvK.m_ulRefrescoDepth);
-    out << (srvK.m_bEnvioDepth = newSrvK.m_bEnvioDepth);
-    out << (srvK.m_bCompressDepth = newSrvK.m_bCompressDepth);
-    out << (srvK.m_ulRefrescoColor = newSrvK.m_ulRefrescoColor);
-    out << (srvK.m_bEnvioColor = newSrvK.m_bEnvioColor);
-    out << (srvK.m_bCompressColor = newSrvK.m_bCompressColor);
+    out << newSrvK.m_fAngulo;
+    out << newSrvK.m_iAnguloKinect;
+    out << newSrvK.m_fAltura;
+    out << newSrvK.m_fYMin;
+    out << newSrvK.m_fYMax;
+    out << newSrvK.m_fZMax;
+    out << newSrvK.m_ulRefresco3D;
+    out << newSrvK.m_usModulo3D;
+    out << newSrvK.m_bEnvio3D;
+    out << newSrvK.m_bEnvio2D;
+    out << newSrvK.m_bEnvioBarrido;
+    out << newSrvK.m_bCompress3D;
+    out << newSrvK.m_iBarridoEcu;
+    out << newSrvK.m_iBarridoYMin;
+    out << newSrvK.m_iBarridoYMax;
+    out << newSrvK.m_ulRefrescoDepth;
+    out << newSrvK.m_bEnvioDepth;
+    out << newSrvK.m_bCompressDepth;
+    out << newSrvK.m_ulRefrescoColor;
+    out << newSrvK.m_bEnvioColor;
+    out << newSrvK.m_bCompressColor;
 
     out.device()->seek(0);
     out << quint64(buff.size() - sizeof(quint64));
@@ -563,27 +563,25 @@ void AttendClient::sendBarrido()
 }
 
 /*!
- * \brief answer incoming connection; bind to a socket in order to I/O data
+ * \brief answer incoming connection; bind to a socket in order to I/O accel data
+ */
+void AttendClient::connectionAccel()
+{
+    qDebug("AttendClient::connectionAccel");
+    skt_accel = s_accel->nextPendingConnection();
+    connect(skt_accel,SIGNAL(readyRead()),this,SLOT(incomingAccel()));
+}
+/*!
+ * \brief read client incomming message and call refreshAccel()
  */
 void AttendClient::incomingAccel()
 {
     //qDebug("AttendClient::incomingAccel");
-    skt_accel = s_accel->nextPendingConnection();
-    connect(skt_accel,SIGNAL(readyRead()),this,SLOT(sendAccel()));
-}
-/*!
- * \brief send accel struct through skt_accel to client
- */
-void AttendClient::sendAccel()
-{
-    //qDebug("AttendClient::sendAccel");
-    if(skt_accel->peerAddress() != peerAddr){
+    if(skt_accel->peerAddress() != peerAddr)
         return;
-    }
 
     QDataStream in(skt_accel);
     in.setVersion(QDataStream::Qt_5_0);
-
     if (sizeAccel == 0) {
         if (skt_accel->bytesAvailable() < sizeof(quint64))
             return;
@@ -592,7 +590,6 @@ void AttendClient::sendAccel()
     if (skt_accel->bytesAvailable() < sizeAccel){
         return;
     }
-
     in >> flagAccel;
 
     sizeAccel = 0;
@@ -602,6 +599,23 @@ void AttendClient::sendAccel()
         return;
     }
 
+    refreshAccel();
+}
+/*!
+ * \brief control time between two consecutive accel
+ * wait 200 ms to avoid network overload
+ */
+void AttendClient::refreshAccel()
+{
+    //qDebug("AttendClient::refreshAccel");
+    QTimer::singleShot(200,this,SLOT(sendAccel()));
+}
+/*!
+ * \brief send accel struct through skt_accel to client
+ */
+void AttendClient::sendAccel()
+{
+    //qDebug("AttendClient::sendAccel()");
     QByteArray buff;
     QDataStream out(&buff, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_0);
@@ -614,4 +628,34 @@ void AttendClient::sendAccel()
     out << quint64(buff.size() - sizeof(quint64));
 
     skt_accel->write(buff);
+}
+
+/*!
+ * \brief aux function to debug ConfigData transmission
+ * \param[in] srvK
+ */
+void AttendClient::showK(srvKinect srvK)
+{
+    qDebug("AttendClient::showK()-------------DEBUG");
+    qDebug("srvK.m_fAngulo %f",srvK.m_fAngulo);
+    qDebug("srvK.m_iAnguloKinect %d",srvK.m_iAnguloKinect);
+    qDebug("srvK.m_fAltura %f",srvK.m_fAltura);
+    qDebug("srvK.m_fYMin %f",srvK.m_fYMin);
+    qDebug("srvK.m_fYMax %f",srvK.m_fYMax);
+    qDebug("srvK.m_fZMax %f",srvK.m_fZMax);
+    qDebug("srvK.m_ulRefresco3D %d",srvK.m_ulRefresco3D);
+    qDebug("srvK.m_usModulo3D %d",srvK.m_usModulo3D);
+    qDebug("srvK.m_bEnvio3D %d", srvK.m_bEnvio3D);
+    qDebug("srvK.m_bEnvio2D %d", srvK.m_bEnvio2D);
+    qDebug("srvK.m_bEnvioBarrido %d", srvK.m_bEnvioBarrido);
+    qDebug("srvK.m_bCompress3D %d", srvK.m_bCompress3D);
+    qDebug("srvK.m_iBarridoEcu %d", srvK.m_iBarridoEcu);
+    qDebug("srvK.m_iBarridoYMin %d", srvK.m_iBarridoYMin);
+    qDebug("srvK.m_iBarridoYMax %d", srvK.m_iBarridoYMax);
+    qDebug("srvK.m_ulRefrescoDepth %d", srvK.m_ulRefrescoDepth);
+    qDebug("srvK.m_bEnvioDepth %d", srvK.m_bEnvioDepth);
+    qDebug("srvK.m_bCompressDepth %d", srvK.m_bCompressDepth);
+    qDebug("srvK.m_ulRefrescoColor %d", srvK.m_ulRefrescoColor);
+    qDebug("srvK.m_bEnvioColor %d", srvK.m_bEnvioColor);
+    qDebug("srvK.m_bCompressColor %d", srvK.m_bCompressColor);
 }

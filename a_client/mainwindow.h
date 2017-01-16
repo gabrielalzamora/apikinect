@@ -30,7 +30,7 @@ public:
     ~MainWindow();
 
 signals:
-    void srvKinectChanged(srvKinect newSrvK);
+    void srvKinectChanged(srvKinect newSrvK);//GUI->client->server new srvKinect
     void ledChanged(int lop);
     void irChanged(int i);
     //void go(int kindex);//server
@@ -43,7 +43,7 @@ public slots:
     void paintBarridoAxes();
     void paint3D();
     void paint2D();
-    void printTimeVector();
+    void paintTimeVector();
     void setSrvKinect(srvKinect newSrvK);//ConfigData => ui->tab_2
     srvKinect getSrvKinect();//ui->tab_2 => ConfigData
     void printMessage(QString str);
@@ -84,6 +84,7 @@ private:
 
     MainClient * client;// handle all client+server interactions
 
+    void showK(srvKinect srvK);///------------------------------------------------------DEBUG
 };
 
 #endif // MAINWINDOW_H
