@@ -14,7 +14,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsItem>
 #include <QHostAddress>
-#include "apikinect/configdata.h"
+//#include "apikinect/configdata.h"
 #include "apikinect/mainclient.h"
 
 namespace Ui {
@@ -49,11 +49,11 @@ public slots:
     void printMessage(QString str);
 
 private slots:
+    void setHost();
     void init();
     void initConnects();
-
-    void setHost();
-
+    //gui interactions
+    void apiConnects();
     void on_pbGo_clicked();
     void on_pbDepth_clicked();
     void on_pbVideo_clicked();

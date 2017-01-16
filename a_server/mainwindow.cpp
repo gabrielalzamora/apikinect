@@ -251,9 +251,9 @@ void MainWindow::printTimeVector()
 }
 /*!
  * \brief set ConfigData gui as newSrvK says
- * \param newSrvK
+ * \param newSrvK config data to show on GUI
  */
-void MainWindow::setSrvKinect(srvKinect newSrvK)
+void MainWindow::setSrvKinect(srvKinect newSrvK)//ConfigData => ui->tab_2
 {
     //qDebug("MainWindow::setSrvKinect");
     QString auxStr;
@@ -262,10 +262,12 @@ void MainWindow::setSrvKinect(srvKinect newSrvK)
     ui->le_limits_high->setText(auxStr.setNum(newSrvK.m_fAltura));
     ui->sb_limits_Ymin->setValue(newSrvK.m_fYMin);
     ui->sb_limits_Ymax->setValue(newSrvK.m_fYMax);
-    ui->sb_limits_Zmax->setValue(newSrvK.m_fZMax);//---------6/21
+    ui->sb_limits_Zmax->setValue(newSrvK.m_fZMax);//----------------6/21
 
-    ui->slider_D_refresh->setValue(newSrvK.m_ulRefresco3D);
-    ui->slider_D_module->setValue(newSrvK.m_usModulo3D);
+    //ui->slider_D_refresh->setValue(newSrvK.m_ulRefresco3D);
+    ui->sb_D_refresh->setValue(newSrvK.m_ulRefresco3D);
+    //ui->slider_D_module->setValue(newSrvK.m_usModulo3D);
+    ui->sb_D_module->setValue(newSrvK.m_usModulo3D);
     if(newSrvK.m_bEnvio3D) ui->cb_D_3->setChecked(true);
     else ui->cb_D_3->setChecked(false);
     if(newSrvK.m_bEnvio2D) ui->cb_D_2->setChecked(true);
@@ -276,26 +278,29 @@ void MainWindow::setSrvKinect(srvKinect newSrvK)
     else ui->cb_D_comp->setChecked(false);
     ui->le_D_ecu->setText(auxStr.setNum(newSrvK.m_iBarridoEcu));
     ui->sb_D_Ymin->setValue(newSrvK.m_iBarridoYMin);
-    ui->sb_D_Ymax->setValue(newSrvK.m_iBarridoYMax);//-------15/21
+    ui->sb_D_Ymax->setValue(newSrvK.m_iBarridoYMax);//-------------15/21
 
-    ui->slider_depth->setValue(newSrvK.m_ulRefrescoDepth);
-    if(newSrvK.m_bEnvioDepth) ui->cb_depth->setChecked(true);
-    else ui->cb_depth->setChecked(false);
+    //ui->slider_depth->setValue(newSrvK.m_ulRefrescoDepth);
+    ui->sb_depth->setValue(newSrvK.m_ulRefrescoDepth);
+    if(newSrvK.m_bEnvioDepth) ui->cb_depth_send->setChecked(true);
+    else ui->cb_depth_send->setChecked(false);
     if(newSrvK.m_bCompressDepth) ui->cb_depth_comp->setChecked(true);
-    else ui->cb_depth_comp->setChecked(false);//---------------------------18/21
+    else ui->cb_depth_comp->setChecked(false);//-------------------18/21
 
-    ui->slider_video->setValue(newSrvK.m_ulRefrescoColor);
-    if(newSrvK.m_bEnvioColor) ui->cb_video->setChecked(true);
-    else ui->cb_depth->setChecked(false);
+    //ui->slider_video->setValue(newSrvK.m_ulRefrescoColor);
+    ui->sb_video->setValue(newSrvK.m_ulRefrescoColor);
+    if(newSrvK.m_bEnvioColor) ui->cb_video_send->setChecked(true);
+    else ui->cb_video_send->setChecked(false);
     if(newSrvK.m_bCompressColor) ui->cb_video_comp->setChecked(true);
-    else ui->cb_video_comp->setChecked(false);//---------------------------21/21
+    else ui->cb_video_comp->setChecked(false);//-------------------21/21
 }
 /*!
  * \brief return srvKinect obtained from ConfigData gui
  * \return srvKinect obtained from ConfigData gui
  */
-srvKinect MainWindow::getSrvKinect()
+srvKinect MainWindow::getSrvKinect()//ui->tab_2 => ConfigData
 {
+    //qDebug("MainWindow::getSrvKinect()");
     srvKinect srvK;
     srvK.m_fAngulo = ui->le_limits_kbaseangle->text().toDouble();
     srvK.m_iAnguloKinect = ui->sb_limits_kangle->text().toInt();
@@ -304,8 +309,8 @@ srvKinect MainWindow::getSrvKinect()
     srvK.m_fYMax = ui->sb_limits_Ymax->text().toFloat();
     srvK.m_fZMax =  ui->sb_limits_Zmax->text().toFloat();//-------------6/21
 
-    srvK.m_ulRefresco3D = ui->slider_D_refresh->value();
-    srvK.m_usModulo3D = ui->slider_D_module->value();
+    srvK.m_ulRefresco3D = ui->sb_D_refresh->value();
+    srvK.m_usModulo3D = ui->sb_D_module->value();
     srvK.m_bEnvio3D = ui->cb_D_3->isChecked();
     srvK.m_bEnvio2D = ui->cb_D_2->isChecked();
     srvK.m_bEnvioBarrido = ui->cb_D_barrido->isChecked();
@@ -314,14 +319,22 @@ srvKinect MainWindow::getSrvKinect()
     srvK.m_iBarridoYMin = ui->sb_D_Ymin->text().toInt();
     srvK.m_iBarridoYMax = ui->sb_D_Ymax->text().toInt();//-------------15/21
 
-    srvK.m_ulRefrescoDepth = ui->slider_depth->value();
+    srvK.m_ulRefrescoDepth = ui->sb_depth->value();
     srvK.m_bEnvioDepth = ui->cb_depth_send->isChecked();
     srvK.m_bCompressDepth = ui->cb_depth_comp->isChecked();
-    srvK.m_ulRefrescoColor = ui->slider_video->value();
+    srvK.m_ulRefrescoColor = ui->sb_video->value();
     srvK.m_bEnvioColor = ui->cb_video_send->isChecked();
     srvK.m_bCompressColor = ui->cb_video_comp->isChecked();//----------21/21
 
     return srvK;
+}
+/*!
+ * \brief show system message on textEdit
+ * \param[in] str message to show
+ */
+void MainWindow::printMessage(QString str)
+{
+    ui->textEdit->append(str);
 }
 
 /*!
@@ -343,6 +356,16 @@ void MainWindow::init()
     imgVideo = NULL;
     imgDepth = NULL;
     imgBarre = NULL;
+
+    //as server hide not used widgets
+    ui->lineEdit->hide();
+    ui->label_serverIp->hide();
+    ui->pbDepth->hide();
+    ui->pbVideo->hide();
+    ui->pb3D->hide();
+    ui->pb2D->hide();
+    ui->pbBarrido->hide();
+    ui->pbAccel->hide();
 }
 /*!
  * \brief write my server ip on gui label
@@ -395,7 +418,7 @@ void MainWindow::initconnects()
  */
 void MainWindow::apiconnects()
 {
-    qDebug("MainWindow::apiconnects");
+    //qDebug("MainWindow::apiconnects");
     //API
     //connect mainserver signals -> this slots
     connect(server,SIGNAL(printVideo()),this,SLOT(paintVideo()));
@@ -413,7 +436,7 @@ void MainWindow::apiconnects()
  */
 void MainWindow::on_pbGo_clicked()
 {
-    qDebug("MainWindow::on_pbGo_clicked");
+    //qDebug("MainWindow::on_pbGo_clicked");
     if( ui->pbGo->isChecked() ){
         qDebug("CONNECT");
         qDebug("comboIndex %u",comboIndex);
@@ -450,7 +473,6 @@ void MainWindow::sliderVideoUp(int i)
     }else if( i>2000 ){
         i=2000;
     }
-    ui->sb_video->setValue(i);
     ui->slider_video->setSliderPosition(i);
 }
 /*!

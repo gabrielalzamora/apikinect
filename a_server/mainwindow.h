@@ -47,11 +47,12 @@ public slots:
     void printTimeVector();
     void setSrvKinect(srvKinect newSrvK);//ConfigData => ui->tab_2
     srvKinect getSrvKinect();//ui->tab_2 => ConfigData
+    void printMessage(QString str);
 
 private slots:
-    void init();
     void setServerIp();
     void putKcombo();
+    void init();
     void initconnects();
     //gui interactions
     void apiconnects();

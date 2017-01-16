@@ -307,6 +307,7 @@ void MainServer::setTime(eOption opt, int msec)
 accel MainServer::getAccel()
 {
     //qDebug("MainServer::getAccel");
+    device->getAccel(a);
     return a;
 }
 
