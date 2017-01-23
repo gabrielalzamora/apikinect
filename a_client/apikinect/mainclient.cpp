@@ -11,16 +11,23 @@
 
 /*!
  * \class MainClient
+ * \brief Holds Client functionality
  *
+ * Through members MainClient, ConfigData (config) and
+ * FrameGL (ui->glWidget) all work is done.
+ * MainClient handle sockets to comunicate with server and
+ *
+ * ConfigData (config) holds configuration to handle data.
+ * FrameGL (ui->glWidget) all related to 3D view.
  */
 
 /*!
  * \brief constructor
  *
  * MainClient constructor starts sockets and graphics
- * objects to show data on gui
+ * objects to show data on gui. MainWindow get information
+ * through MainClient::videoBuf, depthBuf... acceleration
  * \param parent
- * not used
  */
 MainClient::MainClient(QObject *parent) :
     QObject(parent)
@@ -45,7 +52,27 @@ MainClient::~MainClient()
 }
 
 /*!
- * \brief set Host
+ * \brief getter for timeVector, return requested time
+ * \param[in] opt wich time will return
+ * \return requested time in ms
+ */
+int MainClient::getTime(eOption opt)
+{
+    //qDebug("MainServer::getTime");
+    return timeVector[opt];
+}
+/*!
+ * \brief setter of timeVector.
+ * \param opt[in] eOption of timeVector to update.
+ * \param msec[in] value to set on eOption.
+ */
+void MainClient::setTime(eOption opt, int msec)
+{
+    //qDebug("MainServer::setTime");
+    timeVector[opt]=msec;
+}
+/*!
+ * \brief set Host ip
  */
 void MainClient::setHost(QString addr)
 {
@@ -273,6 +300,7 @@ void MainClient::initVideo()
     }
     sizeVideo = 0;
     requestNext(skt_video);
+    t_video.start();
 }
 /*!
  * \brief stop video connection to server
@@ -281,6 +309,7 @@ void MainClient::finalizeVideo()
 {
     //qDebug("MainClient::finalizeVideo");
     if(skt_video->state()){
+        setTime(e_video,0);
         requestStop(skt_video);//request STOP video, to server
         skt_video->disconnectFromHost();
     }
@@ -316,10 +345,11 @@ void MainClient::readDataVideo()
     for(uint i=0;i<sizeVideo;i++){
         ioStream >> videoBuf[i];
     }
-    printVideo();//tell GUI you've got new image frame so show
+    emit printVideo();//tell GUI you've got new image frame so show
 
     sizeVideo = 0;
     requestNext(skt_video);
+    setTime(e_video, t_video.restart());
 }
 /*!
  * \brief tell GUI connection error and close Video socket
@@ -401,7 +431,7 @@ void MainClient::readDataDepth()
     for(int i=0;i<sizeDepth/2;i++){
         ioStream >> depthBuf[i];
     }
-    printDepth();
+    emit printDepth();
     sizeDepth = 0;
     requestNext(skt_depth);
 }
@@ -837,6 +867,8 @@ void MainClient::initMainClient()
     connectedAccel = 0;
     sizeAccel = 0;
     acceleration.accel_x = acceleration.accel_y = acceleration.accel_z = 0.0;
+    timeVector.reserve(e_xtra);
+    for(int i=0; i<e_xtra; i++) timeVector[i]=0;
 }
 /*!
  * \brief utility function to init connects(signals->slots)

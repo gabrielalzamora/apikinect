@@ -12,7 +12,7 @@
 
 #include <QDataStream>
 #include <QObject>
-#include <QTimer>
+#include <QTime>
 #include <QTcpSocket>
 #include <QHostAddress>
 #include "configdata.h"
@@ -33,6 +33,7 @@ signals:
     void print3D();
     void print2D();
     void printAccel();
+    void printTimeVector();
 
     void socketErrorSignal(bool status);
     void socketErrorSignalVideo(bool status);
@@ -42,13 +43,18 @@ signals:
     void socketErrorSignalBarrido(bool status);
     void socketErrorSignalAccel(bool status);
 
-    void actualizeGUIsrvKinect(SrvKinect *newSrvK);// tell GUI to update srvKinect data shown
+    void updateSrvKinect(srvKinect newSrvK);// tell GUI to update srvKinect data shown
+    void actualizeGUIsrvKinect(SrvKinect *newSrvK);//VisorQT specific note first S in SrvKinect not srvKinect
     void sendMessage(QString str);// send String info
 
 public slots:
-    void srvKinectFromGUI(SrvKinect *newSrvK);//srvKinect changed in GUI save & send to server
+    void setTime(eOption opt, int msec);
+    int getTime(eOption opt);
     void setHost(QString addr);
     void setSrvKinect(srvKinect newSrvK);// update config->srvK with new data
+    void setGUISrvKinect(srvKinect newSrvK);//set GUI data here and on server
+    srvKinect getSrvKinect();
+    accel getAccel();
     void requestNext(QTcpSocket *socket);// request next image/pointsCloud/accel... to server
     void requestStop(QTcpSocket *socket);//request to server disconnect socket
     //config srvKinect
@@ -87,12 +93,14 @@ public slots:
     void finalizeAccel();
     void readDataAccel();
     void socketErrorAccel(QAbstractSocket::SocketError socketError);
-    //void showAccel(accel a);
+    void showAccel(accel a);
 
 public:
     ConfigData *config;
+    std::vector<int> timeVector;//msecs
+    QTime t_video, t_depth, t_3D, t_2D, t_barrido;
     //main connection
-    QHostAddress hostAddr;//------------------DEBUG
+    QHostAddress hostAddr;
     QTcpSocket *skt_config;
     int connectedServer;
     quint64 sizeConfig;
@@ -130,6 +138,8 @@ public:
 private:
     void initMainClient();
     void initConnects();
+
+    void showK(srvKinect srvK);//-----DEBUG
 };
 
 #endif // MAINCLIENT_H

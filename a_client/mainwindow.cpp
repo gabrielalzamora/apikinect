@@ -200,9 +200,9 @@ void MainWindow::paintTimeVector()
     QString str,aux;
     accel a(client->getAccel());
     str = "get video = ";
-/*    aux.setNum(client->getTime(e_video));
+    aux.setNum(client->getTime(e_video));
     str.append(aux);
-    aux = " \nget depth = ";
+/*    aux = " \nget depth = ";
     str.append(aux);
 //    aux.setNum(client->getTime(e_depth));
     str.append(aux);
@@ -427,9 +427,9 @@ void MainWindow::apiConnects()
  */
 void MainWindow::setHost()
 {
-    ui->lineEdit->setText("192.168.1.3");///-----------------DEBUG
+//    ui->lineEdit->setText("192.168.1.3");///-----------------DEBUG
 //    ui->lineEdit->setText("192.168.0.157");///-----------------DEBUG
-//    ui->lineEdit->setText("127.0.0.1");///-----------------DEBUG
+    ui->lineEdit->setText("127.0.0.1");///-----------------DEBUG
     hostAddr = QHostAddress(ui->lineEdit->text());
     ui->textEdit->setText("connect to server ip:");
     ui->textEdit->append(ui->lineEdit->text());

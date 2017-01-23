@@ -10,19 +10,24 @@
 #include "mainclient.h"
 
 /*!
- * \class MainClient 
- * \brief center of client functionality handle sockets
- * to retrieve server information
+ * \class MainClient
+ * \brief Holds Client functionality
  *
+ * Through members MainClient, ConfigData (config) and
+ * FrameGL (ui->glWidget) all work is done.
+ * MainClient handle sockets to comunicate with server and
+ *
+ * ConfigData (config) holds configuration to handle data.
+ * FrameGL (ui->glWidget) all related to 3D view.
  */
 
 /*!
  * \brief constructor
  *
  * MainClient constructor starts sockets and graphics
- * objects to show data on gui
+ * objects to show data on gui. MainWindow get information
+ * through MainClient::videoBuf, depthBuf... acceleration
  * \param parent
- * not used
  */
 MainClient::MainClient(QObject *parent) :
     QObject(parent)
@@ -36,49 +41,38 @@ MainClient::MainClient(QObject *parent) :
  */
 MainClient::~MainClient()
 {
-    delete config;
-    delete skt_config;
-    delete skt_video;
-    delete skt_depth;
-    delete skt_3D;
-    delete skt_2D;
-    delete skt_barrido;
-    delete skt_accel;
+    config->deleteLater();
+    skt_config->deleteLater();
+    skt_video->deleteLater();
+    skt_depth->deleteLater();
+    skt_3D->deleteLater();
+    skt_2D->deleteLater();
+    skt_barrido->deleteLater();
+    skt_accel->deleteLater();
 }
 
 /*!
- * \brief if srvKinect changed on GUI save changes and tell to server
- * \param newSrvK
+ * \brief getter for timeVector, return requested time
+ * \param[in] opt wich time will return
+ * \return requested time in ms
  */
-void MainClient::srvKinectFromGUI(SrvKinect *newSrvK)
+int MainClient::getTime(eOption opt)
 {
-    //qDebug("MainClient::srvKinectFromGUI");
-    config->srvK.m_fAngulo = newSrvK->m_fAngulo;
-    config->srvK.m_iAnguloKinect = newSrvK->m_iAnguloKinect;
-    config->srvK.m_fAltura = newSrvK->m_fAltura;
-    config->srvK.m_fYMin = newSrvK->m_fYMin;
-    config->srvK.m_fYMax = newSrvK->m_fYMax;
-    config->srvK.m_fZMax = newSrvK->m_fZMax;
-    config->srvK.m_ulRefresco3D = newSrvK->m_ulRefresco3D;
-    config->srvK.m_usModulo3D = newSrvK->m_usModulo3D;
-    config->srvK.m_bEnvio3D = newSrvK->m_bEnvio3D;
-    config->srvK.m_bEnvio2D = newSrvK->m_bEnvio2D;
-    config->srvK.m_bEnvioBarrido = newSrvK->m_bEnvioBarrido;
-    config->srvK.m_bCompress3D = newSrvK->m_bCompress3D;
-    config->srvK.m_iBarridoEcu = newSrvK->m_iBarridoEcu;
-    config->srvK.m_iBarridoYMin = newSrvK->m_iBarridoYMin;
-    config->srvK.m_iBarridoYMax = newSrvK->m_iBarridoYMax;
-    config->srvK.m_ulRefrescoDepth = newSrvK->m_ulRefrescoDepth;
-    config->srvK.m_bEnvioDepth = newSrvK->m_bEnvioDepth;
-    config->srvK.m_bCompressDepth = newSrvK->m_bCompressDepth;
-    config->srvK.m_ulRefrescoColor = newSrvK->m_ulRefrescoColor;
-    config->srvK.m_bEnvioColor = newSrvK->m_bEnvioColor;
-    config->srvK.m_bCompressColor = newSrvK->m_bCompressColor;
-
-    srvKinectToServer();
+    //qDebug("MainServer::getTime");
+    return timeVector[opt];
 }
 /*!
- * \brief set Host
+ * \brief setter of timeVector.
+ * \param opt[in] eOption of timeVector to update.
+ * \param msec[in] value to set on eOption.
+ */
+void MainClient::setTime(eOption opt, int msec)
+{
+    //qDebug("MainServer::setTime");
+    timeVector[opt]=msec;
+}
+/*!
+ * \brief set Host ip
  */
 void MainClient::setHost(QString addr)
 {
@@ -92,35 +86,44 @@ void MainClient::setHost(QString addr)
  */
 void MainClient::setSrvKinect(srvKinect newSrvK)
 {
-    //qDebug("MainClient::setSrvKinect");
-    config->srvK.m_fAngulo = newSrvK.m_fAngulo;
-    config->srvK.m_iAnguloKinect = newSrvK.m_iAnguloKinect;
-    config->srvK.m_fAltura = newSrvK.m_fAltura;
-    config->srvK.m_fYMin = newSrvK.m_fYMin;
-    config->srvK.m_fYMax = newSrvK.m_fYMax;
-    config->srvK.m_fZMax = newSrvK.m_fZMax;
-    config->srvK.m_ulRefresco3D = newSrvK.m_ulRefresco3D;
-    config->srvK.m_usModulo3D = newSrvK.m_usModulo3D;
-    config->srvK.m_bEnvio3D = newSrvK.m_bEnvio3D;
-    config->srvK.m_bEnvio2D = newSrvK.m_bEnvio2D;
-    config->srvK.m_bEnvioBarrido = newSrvK.m_bEnvioBarrido;
-    config->srvK.m_bCompress3D = newSrvK.m_bCompress3D;
-    config->srvK.m_iBarridoEcu = newSrvK.m_iBarridoEcu;
-    config->srvK.m_iBarridoYMin = newSrvK.m_iBarridoYMin;
-    config->srvK.m_iBarridoYMax = newSrvK.m_iBarridoYMax;
-    config->srvK.m_ulRefrescoDepth = newSrvK.m_ulRefrescoDepth;
-    config->srvK.m_bEnvioDepth = newSrvK.m_bEnvioDepth;
-    config->srvK.m_bCompressDepth = newSrvK.m_bCompressDepth;
-    config->srvK.m_ulRefrescoColor = newSrvK.m_ulRefrescoColor;
-    config->srvK.m_bEnvioColor = newSrvK.m_bEnvioColor;
-    config->srvK.m_bCompressColor = newSrvK.m_bCompressColor;
+    qDebug("MainClient::setSrvKinect");
+    config->setSrvK(newSrvK);
+    emit updateSrvKinect(newSrvK);
+}
+/*!
+ * \brief if srvKinect changed on GUI save changes and tell to server
+ * \param[in] newSrvK
+ */
+void MainClient::setGUISrvKinect(srvKinect newSrvK)
+{
+    //qDebug("MainClient::setGUISrvKinect()");
+    config->setSrvK(newSrvK);//update current client->config->srvKinect
+    srvKinectToServer();//send new srvKinect to server
+}
+/*!
+ * \brief getter for current srvKinect
+ * \return current srvKinect in MainServer::ConfigData::srvK
+ */
+srvKinect MainClient::getSrvKinect()
+{
+    //qDebug("MainClient::getSrvKinect()");
+    return config->getSrvK();
+}
+/*!
+ * \brief MainClient::getAccel
+ * \return
+ */
+accel MainClient::getAccel()
+{
+    return acceleration;
 }
 /*!
  * \brief utility function to request new data to socket (in Apikinect way)
- * \param [in] socket to which request new info.
+ * \param[in] socket to which request new info.
  */
 void MainClient::requestNext(QTcpSocket *socket)
 {
+    //qDebug("MainClient::requestNext()");
     QByteArray buff;
     QDataStream out(&buff, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_0);
@@ -180,7 +183,7 @@ void MainClient::closeConnection()
  */
 void MainClient::readSrvKdata()
 {
-    //qDebug("MainClient::readSrvKdata");
+    qDebug("MainClient::readSrvKdata");
     QDataStream in(skt_config);
     in.setVersion(QDataStream::Qt_5_0);
 
@@ -192,27 +195,30 @@ void MainClient::readSrvKdata()
     if (skt_config->bytesAvailable() < sizeConfig)
         return;
 
-    in >> config->srvK.m_fAngulo;
-    in >> config->srvK.m_iAnguloKinect;
-    in >> config->srvK.m_fAltura;
-    in >> config->srvK.m_fYMin;
-    in >> config->srvK.m_fYMax;
-    in >> config->srvK.m_fZMax;
-    in >> config->srvK.m_ulRefresco3D;
-    in >> config->srvK.m_usModulo3D;
-    in >> config->srvK.m_bEnvio3D;
-    in >> config->srvK.m_bEnvio2D;
-    in >> config->srvK.m_bEnvioBarrido;
-    in >> config->srvK.m_bCompress3D;
-    in >> config->srvK.m_iBarridoEcu;
-    in >> config->srvK.m_iBarridoYMin;
-    in >> config->srvK.m_iBarridoYMax;
-    in >> config->srvK.m_ulRefrescoDepth;
-    in >> config->srvK.m_bEnvioDepth;
-    in >> config->srvK.m_bCompressDepth;
-    in >> config->srvK.m_ulRefrescoColor;
-    in >> config->srvK.m_bEnvioColor;
-    in >> config->srvK.m_bCompressColor;
+    srvKinect srvK;
+    in >> srvK.m_fAngulo;
+    in >> srvK.m_iAnguloKinect;
+    in >> srvK.m_fAltura;
+    in >> srvK.m_fYMin;
+    in >> srvK.m_fYMax;
+    in >> srvK.m_fZMax;
+    in >> srvK.m_ulRefresco3D;
+    in >> srvK.m_usModulo3D;
+    in >> srvK.m_bEnvio3D;
+    in >> srvK.m_bEnvio2D;
+    in >> srvK.m_bEnvioBarrido;
+    in >> srvK.m_bCompress3D;
+    in >> srvK.m_iBarridoEcu;
+    in >> srvK.m_iBarridoYMin;
+    in >> srvK.m_iBarridoYMax;
+    in >> srvK.m_ulRefrescoDepth;
+    in >> srvK.m_bEnvioDepth;
+    in >> srvK.m_bCompressDepth;
+    in >> srvK.m_ulRefrescoColor;
+    in >> srvK.m_bEnvioColor;
+    in >> srvK.m_bCompressColor;
+
+    setSrvKinect(srvK);
 
     if(skt_config->bytesAvailable()){
         qDebug("MainClient::readSrvKdata quedan cosas sin leer en el buffer");//DEBUG
@@ -221,8 +227,6 @@ void MainClient::readSrvKdata()
     }
 
     sizeConfig = 0;//to allow reading next message size
-
-    emit actualizeGUIsrvKinect(&(config->srvK));
 }
 /*!
  * \brief send new srvKinect to server
@@ -234,27 +238,27 @@ void MainClient::srvKinectToServer()
     QDataStream out(&buff, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_0);
     out << quint64(0) << quint8(1);
-    out << config->srvK.m_fAngulo;
-    out << config->srvK.m_iAnguloKinect;
-    out << config->srvK.m_fAltura;
-    out << config->srvK.m_fYMin;
-    out << config->srvK.m_fYMax;
-    out << config->srvK.m_fZMax;
-    out << config->srvK.m_ulRefresco3D;
-    out << config->srvK.m_usModulo3D;
-    out << config->srvK.m_bEnvio3D;
-    out << config->srvK.m_bEnvio2D;
-    out << config->srvK.m_bEnvioBarrido;
-    out << config->srvK.m_bCompress3D;
-    out << config->srvK.m_iBarridoEcu;
-    out << config->srvK.m_iBarridoYMin;
-    out << config->srvK.m_iBarridoYMax;
-    out << config->srvK.m_ulRefrescoDepth;
-    out << config->srvK.m_bEnvioDepth;
-    out << config->srvK.m_bCompressDepth;
-    out << config->srvK.m_ulRefrescoColor;
-    out << config->srvK.m_bEnvioColor;
-    out << config->srvK.m_bCompressColor;
+    out << config->getSrvK().m_fAngulo;
+    out << config->getSrvK().m_iAnguloKinect;
+    out << config->getSrvK().m_fAltura;
+    out << config->getSrvK().m_fYMin;
+    out << config->getSrvK().m_fYMax;
+    out << config->getSrvK().m_fZMax;
+    out << config->getSrvK().m_ulRefresco3D;
+    out << config->getSrvK().m_usModulo3D;
+    out << config->getSrvK().m_bEnvio3D;
+    out << config->getSrvK().m_bEnvio2D;
+    out << config->getSrvK().m_bEnvioBarrido;
+    out << config->getSrvK().m_bCompress3D;
+    out << config->getSrvK().m_iBarridoEcu;
+    out << config->getSrvK().m_iBarridoYMin;
+    out << config->getSrvK().m_iBarridoYMax;
+    out << config->getSrvK().m_ulRefrescoDepth;
+    out << config->getSrvK().m_bEnvioDepth;
+    out << config->getSrvK().m_bCompressDepth;
+    out << config->getSrvK().m_ulRefrescoColor;
+    out << config->getSrvK().m_bEnvioColor;
+    out << config->getSrvK().m_bCompressColor;
     out.device()->seek(0);
     out << quint64(buff.size() - sizeof(quint64));
 
@@ -296,6 +300,7 @@ void MainClient::initVideo()
     }
     sizeVideo = 0;
     requestNext(skt_video);
+    t_video.start();
 }
 /*!
  * \brief stop video connection to server
@@ -304,6 +309,7 @@ void MainClient::finalizeVideo()
 {
     //qDebug("MainClient::finalizeVideo");
     if(skt_video->state()){
+        setTime(e_video,0);
         requestStop(skt_video);//request STOP video, to server
         skt_video->disconnectFromHost();
     }
@@ -339,10 +345,11 @@ void MainClient::readDataVideo()
     for(uint i=0;i<sizeVideo;i++){
         ioStream >> videoBuf[i];
     }
-    printVideo();//tell GUI you've got new image frame so show
+    emit printVideo();//tell GUI you've got new image frame so show
 
     sizeVideo = 0;
     requestNext(skt_video);
+    setTime(e_video, t_video.restart());
 }
 /*!
  * \brief tell GUI connection error and close Video socket
@@ -424,7 +431,7 @@ void MainClient::readDataDepth()
     for(int i=0;i<sizeDepth/2;i++){
         ioStream >> depthBuf[i];
     }
-    printDepth();
+    emit printDepth();
     sizeDepth = 0;
     requestNext(skt_depth);
 }
@@ -778,10 +785,10 @@ void MainClient::readDataAccel()
     ioStream >> acceleration.accel_y;
     ioStream >> acceleration.accel_z;
 
-    emit printAccel();
-
     sizeAccel = 0;
-    requestNext(skt_accel);
+    emit printTimeVector();
+    //showAccel(acceleration);
+    requestNext(skt_accel);//actually click and will return accell
 }
 /*!
  * \brief tell GUI connection error and close Accel socket
@@ -789,10 +796,34 @@ void MainClient::readDataAccel()
  */
 void MainClient::socketErrorAccel(QAbstractSocket::SocketError socketError)
 {
-    //qDebug("MainClient::socketErrorAccel");
+    qDebug("MainClient::socketErrorAccel");
     sendMessage("Error de conexión socket Accel");
     finalizeAccel();
     emit socketErrorSignalAccel(false);
+}
+/*!
+ * \brief MainClient::showAccel
+ * \param[in] a
+ */
+void MainClient::showAccel(accel a)
+{
+    //qDebug("MainClient::showAccel()");
+    QString str = "aX = ";
+    QString aux;
+    aux.setNum(acceleration.accel_x);
+    str.append(aux);
+    str.append("\n");
+    aux = "aY = ";
+    str.append(aux);
+    aux.setNum(acceleration.accel_y);
+    str.append(aux);
+    str.append("\n");
+    aux = "aZ = ";
+    str.append(aux);
+    aux.setNum(acceleration.accel_z);
+    str.append(aux);
+    str.append("\n");
+    sendMessage(str);
 }
 
 /*!
@@ -836,6 +867,8 @@ void MainClient::initMainClient()
     connectedAccel = 0;
     sizeAccel = 0;
     acceleration.accel_x = acceleration.accel_y = acceleration.accel_z = 0.0;
+    timeVector.reserve(e_xtra);
+    for(int i=0; i<e_xtra; i++) timeVector[i]=0;
 }
 /*!
  * \brief utility function to init connects(signals->slots)
@@ -865,24 +898,35 @@ void MainClient::initConnects()
             this,SLOT(socketErrorAccel(QAbstractSocket::SocketError)));
 }
 
-/*
-void MainClient::showAccel(accel a)
+/*!
+ * \brief aux function to debug ConfigData transmission
+ * \param[in] srvK
+ */
+void MainClient::showK(srvKinect srvK)
 {
-    QString str = "aX = ";
-    QString aux;
-    aux.setNum(a.accel_x);
-    str.append(aux);
-    str.append("\n");
-    aux = "aY = ";
-    str.append(aux);
-    aux.setNum(a.accel_y);
-    str.append(aux);
-    str.append("\n");
-    aux = "aZ = ";
-    str.append(aux);
-    aux.setNum(a.accel_z);
-    str.append(aux);
-    str.append("\n");
-    sendMessage(str);
+    qDebug("MainClient::showK()");
+    qDebug("srvK.m_fAngulo %f",srvK.m_fAngulo);
+    qDebug("srvK.m_iAnguloKinect %d",srvK.m_iAnguloKinect);
+    qDebug("srvK.m_fAltura %f",srvK.m_fAltura);
+    qDebug("srvK.m_fYMin %f",srvK.m_fYMin);
+    qDebug("srvK.m_fYMax %f",srvK.m_fYMax);
+    qDebug("srvK.m_fZMax %f",srvK.m_fZMax);
+    qDebug("srvK.m_ulRefresco3D %d",srvK.m_ulRefresco3D);
+    qDebug("srvK.m_usModulo3D %d",srvK.m_usModulo3D);
+    qDebug("srvK.m_bEnvio3D %d", srvK.m_bEnvio3D);
+    qDebug("srvK.m_bEnvio2D %d", srvK.m_bEnvio2D);
+    qDebug("srvK.m_bEnvioBarrido %d", srvK.m_bEnvioBarrido);
+    qDebug("srvK.m_bCompress3D %d", srvK.m_bCompress3D);
+    qDebug("srvK.m_iBarridoEcu %d", srvK.m_iBarridoEcu);
+    qDebug("srvK.m_iBarridoYMin %d", srvK.m_iBarridoYMin);
+    qDebug("srvK.m_iBarridoYMax %d", srvK.m_iBarridoYMax);
+    qDebug("srvK.m_ulRefrescoDepth %d", srvK.m_ulRefrescoDepth);
+    qDebug("srvK.m_bEnvioDepth %d", srvK.m_bEnvioDepth);
+    qDebug("srvK.m_bCompressDepth %d", srvK.m_bCompressDepth);
+    qDebug("srvK.m_ulRefrescoColor %d", srvK.m_ulRefrescoColor);
+    qDebug("srvK.m_bEnvioColor %d", srvK.m_bEnvioColor);
+    qDebug("srvK.m_bCompressColor %d", srvK.m_bCompressColor);
 }
-*/
+
+
+

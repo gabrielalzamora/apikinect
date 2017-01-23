@@ -17,6 +17,8 @@
  * \class MainWindow
  * \brief gui to show apikinect functionality.
  *
+ * Get info from MainServer and their buffers.
+ * FrameGL (ui->glWidget) all related to 3D view.
  */
 
 /*!

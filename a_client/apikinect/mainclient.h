@@ -12,7 +12,7 @@
 
 #include <QDataStream>
 #include <QObject>
-#include <QTimer>
+#include <QTime>
 #include <QTcpSocket>
 #include <QHostAddress>
 #include "configdata.h"
@@ -48,6 +48,8 @@ signals:
     void sendMessage(QString str);// send String info
 
 public slots:
+    void setTime(eOption opt, int msec);
+    int getTime(eOption opt);
     void setHost(QString addr);
     void setSrvKinect(srvKinect newSrvK);// update config->srvK with new data
     void setGUISrvKinect(srvKinect newSrvK);//set GUI data here and on server
@@ -95,8 +97,10 @@ public slots:
 
 public:
     ConfigData *config;
+    std::vector<int> timeVector;//msecs
+    QTime t_video, t_depth, t_3D, t_2D, t_barrido;
     //main connection
-    QHostAddress hostAddr;//------------------DEBUG
+    QHostAddress hostAddr;
     QTcpSocket *skt_config;
     int connectedServer;
     quint64 sizeConfig;

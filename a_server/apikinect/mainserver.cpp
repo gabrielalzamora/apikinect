@@ -26,7 +26,6 @@
  * relations.
  * Apikinect allow to handle and comunicate with kinect.
  * ConfigData (config) holds configuration to handle data.
- * FrameGL (ui->glWidget) all related to 3D view.
  * QTcpServer is the server who listen to incoming clients.
  * Freenect::Freenect will hold usb context on kinect communication.
  * Apikinect hold single kinect (device) comunication.

@@ -106,5 +106,6 @@ private:
     std::vector<int> timeVector;//msecs
     pBuf structBuffers;// to tell AttendClient *attendant where to find data buffers
 
+    void showK(srvKinect srvK);///------------------------------------------------------DEBUG
 };
 #endif // MAINSERVER_H

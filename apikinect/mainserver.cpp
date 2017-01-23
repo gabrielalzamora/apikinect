@@ -26,7 +26,6 @@
  * relations.
  * Apikinect allow to handle and comunicate with kinect.
  * ConfigData (config) holds configuration to handle data.
- * FrameGL (ui->glWidget) all related to 3D view.
  * QTcpServer is the server who listen to incoming clients.
  * Freenect::Freenect will hold usb context on kinect communication.
  * Apikinect hold single kinect (device) comunication.
@@ -39,7 +38,7 @@
  */
 MainServer::MainServer(bool sirvo, QObject *parent) : QObject(parent)
 {
-    qDebug("MainServer::MainServer");
+    //qDebug("MainServer::MainServer");
     init();
     if(sirvo) startServer();
 }
@@ -49,6 +48,11 @@ MainServer::MainServer(bool sirvo, QObject *parent) : QObject(parent)
 MainServer::~MainServer()
 {
     qDebug("MainServer::~MainServer()");
+    server->deleteLater();
+    timer3D->deleteLater();
+    timerDepth->deleteLater();
+    timerVideo->deleteLater();
+    timerTime->deleteLater();
 }
 
 /*!
@@ -80,8 +84,8 @@ void MainServer::startK(int indexK)
     currentKIndex = indexK;
 }
 /*!
- * \brief destroy kinect handler.
- * \param [in] index kinect handler index to be destroyed.
+ * \brief destroy indexK kinect handler.
+ * \param [in] index of kinect whose handler will be destroyed.
  */
 void MainServer::stopK(int indexK)
 {
@@ -139,10 +143,12 @@ int MainServer::getDeviceStatus()
     return 1;
 }
 /*!
- * \brief set srvKinect data sended by client
- * \param [in] newSrvK
+ * \brief set srvKinect data in MainServer::ConfigData::srvKinect
+ * \param[in] newSrvK
  *
  * set client current srvKinect to MainServer::ConfigData::srvK
+ * usually as new srvKinect sended by client and signaling to
+ * GUI to show updated config data.
  */
 void MainServer::setSrvKinect(srvKinect newSrvK)
 {
@@ -166,13 +172,13 @@ void MainServer::setSrvKinect(srvKinect newSrvK)
         //actualizamos ángulo en kinect
         if( config->getSrvK().m_iAnguloKinect != newSrvK.m_iAnguloKinect ){
             config->setSrvK(newSrvK);
-            emit updateSrvKinect(config->getSrvK());
+            emit updateSrvKinect(newSrvK);
             updateKinect();
             return;
         }
     }
     config->setSrvK(newSrvK);
-    emit updateSrvKinect(config->getSrvK());//warn to update GUI
+    emit updateSrvKinect(newSrvK);//warn to update GUI
 }
 /*!
  * \brief set srvKinect data sended by GUI
@@ -458,7 +464,7 @@ void MainServer::attendNewClient()
 }
 
 /*!
- * \brief MainServer::nextVideoFrame
+ * \brief load next Video frame to Video vector
  */
 void MainServer::nextVideoFrame()
 {
@@ -467,7 +473,7 @@ void MainServer::nextVideoFrame()
     emit printVideo();
 }
 /*!
- * \brief MainServer::nextDepthFrame
+ * \brief load next Depth frame to depth vector
  */
 void MainServer::nextDepthFrame()
 {
@@ -529,6 +535,36 @@ void MainServer::next3DFrame()
 void MainServer::nextTimeVector()
 {
     //qDebug("MainServer::nextTimeVector");
+    device->getAccel(a);
     emit printTimeVector();
 }
 
+/*!
+ * \brief aux function to debug ConfigData transmission
+ * \param[in] srvK
+ */
+void MainServer::showK(srvKinect srvK)
+{
+    qDebug("MainServert::showK()");
+    qDebug("srvK.m_fAngulo %f",srvK.m_fAngulo);
+    qDebug("srvK.m_iAnguloKinect %d",srvK.m_iAnguloKinect);
+    qDebug("srvK.m_fAltura %f",srvK.m_fAltura);
+    qDebug("srvK.m_fYMin %f",srvK.m_fYMin);
+    qDebug("srvK.m_fYMax %f",srvK.m_fYMax);
+    qDebug("srvK.m_fZMax %f",srvK.m_fZMax);
+    qDebug("srvK.m_ulRefresco3D %d",srvK.m_ulRefresco3D);
+    qDebug("srvK.m_usModulo3D %d",srvK.m_usModulo3D);
+    qDebug("srvK.m_bEnvio3D %d", srvK.m_bEnvio3D);
+    qDebug("srvK.m_bEnvio2D %d", srvK.m_bEnvio2D);
+    qDebug("srvK.m_bEnvioBarrido %d", srvK.m_bEnvioBarrido);
+    qDebug("srvK.m_bCompress3D %d", srvK.m_bCompress3D);
+    qDebug("srvK.m_iBarridoEcu %d", srvK.m_iBarridoEcu);
+    qDebug("srvK.m_iBarridoYMin %d", srvK.m_iBarridoYMin);
+    qDebug("srvK.m_iBarridoYMax %d", srvK.m_iBarridoYMax);
+    qDebug("srvK.m_ulRefrescoDepth %d", srvK.m_ulRefrescoDepth);
+    qDebug("srvK.m_bEnvioDepth %d", srvK.m_bEnvioDepth);
+    qDebug("srvK.m_bCompressDepth %d", srvK.m_bCompressDepth);
+    qDebug("srvK.m_ulRefrescoColor %d", srvK.m_ulRefrescoColor);
+    qDebug("srvK.m_bEnvioColor %d", srvK.m_bEnvioColor);
+    qDebug("srvK.m_bCompressColor %d", srvK.m_bCompressColor);
+}
