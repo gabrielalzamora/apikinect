@@ -567,7 +567,7 @@ void AttendClient::sendBarrido()
  */
 void AttendClient::connectionAccel()
 {
-    qDebug("AttendClient::connectionAccel");
+    //qDebug("AttendClient::connectionAccel");
     skt_accel = s_accel->nextPendingConnection();
     connect(skt_accel,SIGNAL(readyRead()),this,SLOT(incomingAccel()));
 }

@@ -51,6 +51,9 @@ MainWindow::~MainWindow()
 {
     qDebug("MainWindow::~MainWindow()");
     delete ui;
+    sceneBarre->deleteLater();
+    sceneVideo->deleteLater();
+    sceneDepth->deleteLater();
 }
 
 /*!

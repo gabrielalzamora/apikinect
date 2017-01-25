@@ -48,6 +48,7 @@ MainServer::MainServer(bool sirvo, QObject *parent) : QObject(parent)
 MainServer::~MainServer()
 {
     qDebug("MainServer::~MainServer()");
+    attendant->deleteLater();
     server->deleteLater();
     timer3D->deleteLater();
     timerDepth->deleteLater();
@@ -154,19 +155,19 @@ void MainServer::setSrvKinect(srvKinect newSrvK)
 {
     //qDebug("MainServer::setSrvKinect");
     if(getDeviceStatus()){//adaptamos QTimers si varia Refresco
-        if( !newSrvK.m_bEnvioColor && timerVideo->isActive() ){
+        if( !newSrvK.m_bEnvioColor  && timerVideo->isActive() ){
             timerVideo->stop();
-        }else if( config->getSrvK().m_ulRefrescoColor != newSrvK.m_ulRefrescoColor ){
+        }else if( (config->getSrvK().m_ulRefrescoColor != newSrvK.m_ulRefrescoColor) || newSrvK.m_bEnvioColor ){
             timerVideo->start(newSrvK.m_ulRefrescoColor);
         }
         if( !newSrvK.m_bEnvioDepth && timerDepth->isActive() ){
             timerDepth->stop();
-        }else if( config->getSrvK().m_ulRefrescoDepth != newSrvK.m_ulRefrescoDepth ){
+        }else if( (config->getSrvK().m_ulRefrescoDepth != newSrvK.m_ulRefrescoDepth) || newSrvK.m_bEnvioDepth ){
             timerDepth->start(newSrvK.m_ulRefrescoDepth);
         }
-        if( !(config->getSrvK().m_bEnvio3D || config->getSrvK().m_bEnvio2D || config->getSrvK().m_bEnvioBarrido) && timer3D->isActive() ){
+        if( !(newSrvK.m_bEnvio3D || newSrvK.m_bEnvio2D || newSrvK.m_bEnvioBarrido) && timer3D->isActive() ){
             timer3D->stop();
-        }else if( config->getSrvK().m_ulRefresco3D != newSrvK.m_ulRefresco3D ){
+        }else if( (config->getSrvK().m_ulRefresco3D != newSrvK.m_ulRefresco3D) || (newSrvK.m_bEnvio3D || newSrvK.m_bEnvio2D || newSrvK.m_bEnvioBarrido) ){
             timer3D->start(newSrvK.m_ulRefresco3D);
         }
         //actualizamos ángulo en kinect

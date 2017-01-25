@@ -1,8 +1,5 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2016-07-08T10:36:55
-#
-# y no sabes cuantas veces he modificado...
 #-------------------------------------------------
 
 QT       += core gui network opengl widgets
